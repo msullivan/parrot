@@ -49,11 +49,12 @@
 
     function deg(f) { return f * Math.PI / 180 }
 
+    function xToScreen(x) { return x; }
     function yToScreen(y) {
         return (TILE*(Y_TILES-1)) - y;
     }
     function toScreen(v) {
-        return new Vec2(v.x, yToScreen(v.y));
+        return new Vec2(xToScreen(v.x), yToScreen(v.y));
     }
 
     /////////////// Globals?
@@ -62,7 +63,7 @@
     var $ = function(s) { return document.getElementById(s); };
 
     // Lol.
-    var game = {birb: null, noobs: []};
+    var game = {birb: null, noobs: [], nextCoin: 0.0, score: 0};
 
     const canvas = $("game");
     const ctx = canvas.getContext("2d");
@@ -102,6 +103,7 @@
             if (this.crashed) {
                 this.p.y = 0;
                 this.v = new Vec2(0, 0);
+                if (!oldCrashed) game.score -= 3;
             } else {
                 this.v.x = SCROLL; // XXX
             }
@@ -138,7 +140,7 @@
             //console.log(this);
             ctx.save();
             ctx.strokeStyle = "green";
-            ctx.translate(this.p.x, yToScreen(this.p.y));
+            ctx.translate(xToScreen(this.p.x), yToScreen(this.p.y));
             ctx.rotate(this.crashed ? 0 : -this.v.angle());
             const len = 30;
             const wangle = this.wing_angle;
@@ -150,7 +152,32 @@
 
             ctx.restore();
         }
+    };
 
+    class Coin {
+        constructor(obj) {
+            this.v = new Vec2(0, 0);
+            // Is this bullshit?
+            for (let elem in obj) this[elem] = obj[elem];
+        }
+
+        move() {
+            if (game.birb.p.sub(this.p).mag() <= this.size) {
+                game.score++;
+                return true;
+            }
+        }
+
+        render(ctx) {
+            ctx.save();
+            ctx.fillStyle = "#FFC800";
+            ctx.beginPath();
+            ctx.ellipse(xToScreen(this.p.x), yToScreen(this.p.y),
+                        this.size, this.size, 0, 0, 2*Math.PI);
+            ctx.fill();
+
+            ctx.restore();
+        }
     };
 
     //////////////////////////////////////////////
@@ -194,9 +221,13 @@
         // game.noobs.sort(function (n1, n2) { return n1.py - n2.py; });
 
         ctx.save();
-        ctx.translate((X_TILES/2+0.5)*TILE -  game.birb.p.x, 0);
+        ctx.translate((X_TILES/4)*TILE -  game.birb.p.x, 0);
         game.noobs.forEach(function (noob) { noob.render(ctx); });
         ctx.restore();
+
+        // Draw score
+        ctx.font = "48px sans";
+        ctx.fillText(game.score.toString(), 20, 50);
     }
 
     // function getKbdDirection() {
@@ -207,10 +238,24 @@
     //     return null;
     // }
 
-    function tick() {
+    function tick(time) {
         game.birb.setFlapping(kd.SPACE.isDown());
+        if (game.birb.p.x > game.nextCoin) {
+            let s = game.nextCoin == 0 ? 0.5 : 1;
+            let newc = new Coin({
+                p: new Vec2(game.birb.p.x + s*canvas.width,
+                            Math.random()*(canvas.height-TILE)),
+                size: 20,
+            });
+            console.log("new coin at ", newc.p.x);
+            game.noobs.push(newc);
+            game.nextCoin = game.birb.p.x +
+                (Math.random()*0.3 + 0.2)*canvas.width;
+        }
 
-        game.noobs.forEach(function (noob) { noob.move(); });
+        game.noobs = game.noobs.filter(function (noob) {
+            return noob.move() !== true;
+        });
     }
 
     function now() { return performance.now(); }
