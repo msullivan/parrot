@@ -237,9 +237,14 @@
     //     if (kd.S.isDown() || kd.DOWN.isDown()) return 'down';
     //     return null;
     // }
+    var touched = false;
+    function touch(ev, on) {
+        ev.preventDefault();
+        touched = on;
+    }
 
     function tick(time) {
-        game.birb.setFlapping(kd.SPACE.isDown());
+        game.birb.setFlapping(kd.SPACE.isDown() || touched);
         if (game.birb.p.x > game.nextCoin) {
             let s = game.nextCoin == 0 ? 0.5 : 1;
             let newc = new Coin({
@@ -306,6 +311,12 @@
             // audio.pause();
             stopRunning();
         });
+        canvas.addEventListener(
+            "touchstart", function(ev) { touch(ev, true) });
+        canvas.addEventListener(
+            "touchend", function(ev) { touch(ev, false) });
+        canvas.addEventListener(
+            "touchcancel", function(ev) { touch(ev, false) });
 
         // kd.M.press(function() {
         //     game.audioOn = !game.audioOn;
