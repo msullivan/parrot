@@ -63,7 +63,7 @@
 
     const SCROLL = 2;
     const G = 0.2;
-    const FLAP = 5;
+    const FLAP = 3;
 
     ////////////////////////////////////////////////////////////
     class Bird {
@@ -85,21 +85,22 @@
         move() {
             if (!this.moving) return;
 
+            if (this.p.y > (Y_TILES-1)*TILE && !this.flapping) {
+                this.p.y = (Y_TILES-1)*TILE;
+                this.v = new Vec2(0, 0);
+            }
+
             this.p = this.p.add(this.v);
 
-            // let v = this.v;
-            // if (this.flapping) {
-            //     v = v.add(directions.up.scale(FLAP));
-            // }
             if (this.flapping) {
                 this.v = directions.up.scale(FLAP);
             } else {
                 this.v = this.v.add(directions.down.scale(G))
             }
 
-            // this.px += directions[this.direction].dx * this.movement.speed;
-            // this.py += directions[this.direction].dy * this.movement.speed;
-            this.steps++;
+            if (this.flapping) {
+                this.steps++;
+            }
 
             // Manage bird angle
             const N = 20;
