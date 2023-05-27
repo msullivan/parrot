@@ -4,8 +4,8 @@
 
     var BG_TILE = 128;
     var TILE = 32;
-    var X_TILES = 20;
-    var Y_TILES = 15;
+    var X_TILES = 30;
+    var Y_TILES = 24;
 
     /////////////// Functions?
 
@@ -35,6 +35,9 @@
         norm() {
             return this.scale(1/this.mag())
         }
+        angle() {
+            return Math.atan2(this.y, this.x);
+        }
     }
 
     var directions = {
@@ -59,7 +62,7 @@
     var $ = function(s) { return document.getElementById(s); };
 
     // Lol.
-    var game = {bgOffset: 0, noobs: []};
+    var game = {birb: null, noobs: []};
 
     const canvas = $("game");
     const ctx = canvas.getContext("2d");
@@ -71,14 +74,16 @@
     const SCROLL = 2;
     const G = 0.2;
     const FLAP = 3;
+    const FLAP_A = 0.5;
 
     ////////////////////////////////////////////////////////////
     class Bird {
         constructor(obj) {
             this.moving = true;
+            this.crashed = false;
             this.steps = 0;
             this.flapping = 0;
-            this.v = new Vec2(0, 0);
+            this.v = new Vec2(SCROLL, 0);
 
             // Is this bullshit?
             for (let elem in obj) this[elem] = obj[elem];
@@ -92,18 +97,27 @@
         move() {
             if (!this.moving) return;
 
-            if (this.p.y < 0 && !this.flapping) {
+            let oldCrashed = this.crashed;
+            this.crashed = this.p.y <= 0;
+            if (this.crashed) {
                 this.p.y = 0;
                 this.v = new Vec2(0, 0);
+            } else {
+                this.v.x = SCROLL; // XXX
             }
 
             this.p = this.p.add(this.v);
 
             if (this.flapping) {
-                this.v = directions.up.scale(FLAP);
-            } else {
-                this.v = this.v.add(directions.down.scale(G))
+                let amt = G;
+                if (this.v.y < FLAP) amt += FLAP_A;
+                this.v = this.v.add(directions.up.scale(amt));
+                if (this.crashed && oldCrashed) {
+                    this.p.y += 1;
+                }
             }
+
+            this.v = this.v.add(directions.down.scale(G))
 
             if (this.flapping) {
                 this.steps++;
@@ -117,7 +131,7 @@
             }
             const lo = 20;
             const hi = 50;
-            this.angle = deg(lo + (hi-lo)*(cnt/N));
+            this.wing_angle = deg(lo + (hi-lo)*(cnt/N));
         }
 
         render(ctx) {
@@ -125,12 +139,13 @@
             ctx.save();
             ctx.strokeStyle = "green";
             ctx.translate(this.p.x, yToScreen(this.p.y));
+            ctx.rotate(this.crashed ? 0 : -this.v.angle());
             const len = 30;
-            const bangle = this.angle;
+            const wangle = this.wing_angle;
             ctx.beginPath();
-            ctx.moveTo(-Math.cos(bangle)*len, -Math.sin(bangle)*len);
+            ctx.moveTo(-Math.cos(wangle)*len, -Math.sin(wangle)*len);
             ctx.lineTo(0, 0);
-            ctx.lineTo(-Math.cos(bangle)*len, Math.sin(bangle)*len);
+            ctx.lineTo(-Math.cos(wangle)*len, Math.sin(wangle)*len);
             ctx.stroke();
 
             ctx.restore();
@@ -141,11 +156,9 @@
     //////////////////////////////////////////////
     function gameSetup() {
         game.birb = new Bird({
-            p: new Vec2((X_TILES/2+0.5)*TILE, 7*TILE),
+            p: new Vec2(0, 7*TILE),
         });
         game.noobs.push(game.birb);
-
-        // kd.SPACE.press(function() { launchFireball(); });
     }
 
     ///////////////////////////////////////////////
@@ -156,13 +169,12 @@
     }
 
     function drawBg() {
-        // Draw floor
         for (var x = -1; x < X_TILES + 1; x++) {
             const y = -1;
 
             ctx.drawImage(
                 bg, 0, 0, BG_TILE, BG_TILE,
-                x*TILE - game.bgOffset,
+                x*TILE - (game.birb.p.x % TILE),
                 yToScreen(y*TILE) - TILE,
                 TILE, TILE
             )
@@ -181,9 +193,10 @@
         // // Sort by y as a painters algorithm type thing.
         // game.noobs.sort(function (n1, n2) { return n1.py - n2.py; });
 
+        ctx.save();
+        ctx.translate((X_TILES/2+0.5)*TILE -  game.birb.p.x, 0);
         game.noobs.forEach(function (noob) { noob.render(ctx); });
-
-        // canvas.renderAll();
+        ctx.restore();
     }
 
     // function getKbdDirection() {
@@ -195,8 +208,6 @@
     // }
 
     function tick() {
-        game.bgOffset = (game.bgOffset + SCROLL) % TILE;
-
         game.birb.setFlapping(kd.SPACE.isDown());
 
         game.noobs.forEach(function (noob) { noob.move(); });
