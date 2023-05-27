@@ -38,13 +38,20 @@
     }
 
     var directions = {
-        down:  new Vec2(0, 1),
+        down:  new Vec2(0, -1),
         left:  new Vec2(-1, 0),
         right: new Vec2(1, 0),
-        up:    new Vec2(0, -1),
+        up:    new Vec2(0, 1),
     };
 
     function deg(f) { return f * Math.PI / 180 }
+
+    function yToScreen(y) {
+        return (TILE*(Y_TILES-1)) - y;
+    }
+    function toScreen(v) {
+        return new Vec2(v.x, yToScreen(v.y));
+    }
 
     /////////////// Globals?
 
@@ -85,8 +92,8 @@
         move() {
             if (!this.moving) return;
 
-            if (this.p.y > (Y_TILES-1)*TILE && !this.flapping) {
-                this.p.y = (Y_TILES-1)*TILE;
+            if (this.p.y < 0 && !this.flapping) {
+                this.p.y = 0;
                 this.v = new Vec2(0, 0);
             }
 
@@ -117,7 +124,7 @@
             //console.log(this);
             ctx.save();
             ctx.strokeStyle = "green";
-            ctx.translate(this.p.x, this.p.y);
+            ctx.translate(this.p.x, yToScreen(this.p.y));
             const len = 30;
             const bangle = this.angle;
             ctx.beginPath();
@@ -134,7 +141,7 @@
     //////////////////////////////////////////////
     function gameSetup() {
         game.birb = new Bird({
-            p: new Vec2((X_TILES/2+0.5)*TILE, 5*TILE),
+            p: new Vec2((X_TILES/2+0.5)*TILE, 7*TILE),
         });
         game.noobs.push(game.birb);
 
@@ -151,12 +158,12 @@
     function drawBg() {
         // Draw floor
         for (var x = -1; x < X_TILES + 1; x++) {
-            const y = Y_TILES - 1;
+            const y = -1;
 
             ctx.drawImage(
                 bg, 0, 0, BG_TILE, BG_TILE,
                 x*TILE - game.bgOffset,
-                y*TILE,
+                yToScreen(y*TILE) - TILE,
                 TILE, TILE
             )
         }
