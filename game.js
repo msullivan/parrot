@@ -201,35 +201,39 @@
 
         game.noobs.forEach(function (noob) { noob.move(); });
     }
-    function frame() {
-        // console.log("tick");
-        // XXX: we can split up tick and draw
-        // always call tick() once per delta in case we dropped frames
-        // but only call draw nce
-        tick();
-        draw();
-    }
 
     function now() { return performance.now(); }
 
     // this is fucked up
-    function runAtFramerate(func, fps) {
+    function runAtFramerate(tick, draw, fps) {
         var interval = Math.floor(1000/fps);
         var last = 0;
+        var lastReal = 0;
+        var stop = false;
         function cb() {
+            if (stop) return;
+
             if (last == null) return;
             var start = now();
-            var since = start - last;
+            var since = start - lastReal;
+            lastReal = start;
 
+            let iters = 0;
+            while (last + interval < start) {
+                last += interval;
+                tick(last);
+                iters++;
+            }
             // console.log("since last: " + since +
-            //            " wanted: " + interval + " time: " + start);
-            last = start;
+            //             " wanted: " + interval + " time: " + start
+            //            + " iters: " + iters);
 
-            func(start);
+            draw(start);
+
+            requestAnimationFrame(cb);
         }
         cb();
-        var handle = setInterval(cb, interval);
-        var stopRunning = function() { clearInterval(handle); };
+        var stopRunning = function() { stop = true; };
         return stopRunning;
     }
 
@@ -253,7 +257,7 @@
         // });
 
         $("loading").textContent = "";
-        stopRunning = runAtFramerate(frame, TILE);
+        stopRunning = runAtFramerate(tick, draw, 30);
     }
     window.onload = init;
 
