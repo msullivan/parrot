@@ -423,6 +423,29 @@
         return stopRunning;
     }
 
+    function setupButtons() {
+        let fly = $("fly_button");
+        const flyctx = fly.getContext("2d");
+        flyctx.save();
+        flyctx.fillStyle = "#aaaaaa";
+        flyctx.fillRect(0, 0, fly.width, fly.height);
+        flyctx.restore();
+        flyctx.font = "48px sans";
+        flyctx.fillText("Fly!", 50, 65);
+
+        const ON = ["touchstart", "mousedown"];
+        const OFF = ["touchend", "touchcancel", "mouseup", "mouseout"];
+        ON.forEach(function(on) {
+            console.log("ON", on);
+            fly.addEventListener(
+                on, function(ev) { touch(ev, true) });
+        });
+        OFF.forEach(function(off) {
+            fly.addEventListener(
+                off, function(ev) { touch(ev, false) });
+        });
+    }
+
     function init() {
         $("fps").value = DEFAULT_FPS;
         console.log("DPR: " + window.devicePixelRatio);
@@ -439,12 +462,7 @@
             // audio.pause();
             stopRunning();
         });
-        document.addEventListener(
-            "touchstart", function(ev) { touch(ev, true) });
-        document.addEventListener(
-            "touchend", function(ev) { touch(ev, false) });
-        document.addEventListener(
-            "touchcancel", function(ev) { touch(ev, false) });
+        setupButtons();
 
         // kd.M.press(function() {
         //     game.audioOn = !game.audioOn;
