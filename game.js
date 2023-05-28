@@ -562,6 +562,11 @@
             stopRunning();
         });
         setupButtons();
+        document.addEventListener("keydown", function(evt) {
+            if (evt.keyCode == " ".charCodeAt(0)) {
+                evt.preventDefault();
+            }
+        });
 
         // kd.M.press(function() {
         //     game.audioOn = !game.audioOn;
