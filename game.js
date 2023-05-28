@@ -134,7 +134,7 @@
     var $ = function(s) { return document.getElementById(s); };
 
     // Lol.
-    var game = {birb: null, noobs: [], nextCoin: -1, score: 0};
+    var game = {birb: null, noobs: [], nextCoin: -1, nextCloud: 0, score: 0};
 
     const canvas = $("game");
     const ctx = canvas.getContext("2d");
@@ -364,6 +364,18 @@
             layer: 0,
         });
     }
+    function makeCoin(x) {
+        return new Coin({
+            p: new Vec2(
+                game.nextCoin,
+                getRandom(PARROT_FEET * 1.5,
+                          canvas_height-GROUND_HEIGHT-COIN_SIZE),
+            ),
+            size: COIN_SIZE,
+            layer: 0.5,
+        });
+    }
+
 
     //////////////////////////////////////////////
     function gameSetup() {
@@ -377,10 +389,15 @@
         game.noobs.push(game.birb);
 
         // XXX bad approach
-        let next = 300;
-        for (let i = 0; i < 100; i++) {
-            game.noobs.push(makeCloud(next));
-            next += getRandom(250, 500);
+        game.nextCoin = 500;
+        for (let i = 0; i < 5; i++) {
+            game.noobs.push(makeCoin(game.nextCoin));
+            game.nextCoin += getRandom(0.2, 0.5)*canvas_width;
+        }
+        game.nextCloud = 300;
+        for (let i = 0; i < 5; i++) {
+            game.noobs.push(makeCloud(game.nextCloud));
+            game.nextCloud += getRandom(250, 500);
         }
     }
 
@@ -450,21 +467,20 @@
 
     function tick(time) {
         game.birb.setFlapping(kd.SPACE.isDown() || touched);
-        if (game.birb.p.x > game.nextCoin) {
-            let s = game.nextCoin < 0 ? 0.5 : 1;
-            let newc = new Coin({
-                p: new Vec2(
-                    game.birb.p.x + s*canvas_width,
-                    getRandom(PARROT_FEET * 1.5,
-                              canvas_height-GROUND_HEIGHT-COIN_SIZE),
-                ),
-                size: COIN_SIZE,
-                layer: 0.5,
-            });
-            console.log("new coin at ", newc.p.x);
+
+        let spawnPoint = game.birb.p.x + canvas_width;
+
+        if (spawnPoint > game.nextCoin) {
+            let newc = makeCoin(game.nextCoin);
+            game.nextCoin = spawnPoint + getRandom(0.2, 0.5)*canvas_width;
             game.noobs.push(newc);
-            game.nextCoin = game.birb.p.x +
-                getRandom(0.2, 0.5)*canvas_width;
+            // console.log("new coin at ", newc.p.x);
+        }
+        if (spawnPoint > game.nextCloud) {
+            let newc = makeCloud(game.nextCloud);
+            game.nextCloud += getRandom(250, 500);
+            game.noobs.push(newc);
+            // console.log("new cloud at ", newc.p.x);
         }
 
         game.noobs = game.noobs.filter(function (noob) {
