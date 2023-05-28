@@ -50,7 +50,7 @@
         return canvas.height - GROUND_HEIGHT - y;
     }
     function toScreen(v) {
-        return new Vec2(xToScreen(v.x), yToScreen(v.y));
+        return [xToScreen(v.x), yToScreen(v.y)];
     }
 
     /////////////// Globals?
@@ -154,7 +154,7 @@
             //console.log(this);
             ctx.save();
             ctx.strokeStyle = "green";
-            ctx.translate(xToScreen(this.p.x), yToScreen(this.p.y));
+            ctx.translate(...toScreen(this.p));
             ctx.rotate(this.crashed ? 0 : -this.v.angle());
             const len = 30;
             const wangle = this.wing_angle;
@@ -173,8 +173,7 @@
                 sprite,
                 // 0, 0, sprite.width, sprite.height,
                 // 317, 40, 1300, 1150,
-                xToScreen(this.p.x),
-                yToScreen(this.p.y),
+                ...toScreen(this.p),
                 // 17*scale, 11*scale
                 sprite.width/scale, sprite.height/scale,
             );
@@ -182,8 +181,7 @@
             ctx.save();
             ctx.fillStyle = "green";
             ctx.beginPath();
-            ctx.ellipse(xToScreen(this.p.x), yToScreen(this.p.y),
-                        4, 4, 0, 0, 2*Math.PI);
+            ctx.ellipse(...toScreen(this.p), 4, 4, 0, 0, 2*Math.PI);
             ctx.fill();
             ctx.restore();
         }
@@ -210,8 +208,8 @@
             ctx.save();
             ctx.fillStyle = "#FFC800";
             ctx.beginPath();
-            ctx.ellipse(xToScreen(this.p.x), yToScreen(this.p.y),
-                        this.size, this.size, 0, 0, 2*Math.PI);
+            ctx.ellipse(
+                ...toScreen(this.p), this.size, this.size, 0, 0, 2*Math.PI);
             ctx.fill();
 
             ctx.restore();
