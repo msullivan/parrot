@@ -155,7 +155,7 @@
         birdSprites.push($("pf" + i));
     }
     let cloudSprites = [];
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= 5; i++) {
         cloudSprites.push($("cloud" + i));
     }
 
