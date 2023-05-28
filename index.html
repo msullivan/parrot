@@ -6,13 +6,13 @@
     <title>Parrot!</title>
     <script type="text/javascript" src="https://jeremyckahn.github.io/keydrown/dist/keydrown.min.js"></script>
     <style type="text/css">
-      canvas { border: 1px solid black; }
+      #game { border: 1px solid black; }
       .int {display: table-cell; width: 2.5em;}
     </style>
   </head>
   <body>
     <canvas id="game" width="960" height="640"></canvas><br>
-    <img src="images/fly.png" id="fly_button" height="100">
+    <canvas id="fly_button" height="100"></canvas>
 
     <div id="directions">
       Spacebar: fly<br>
@@ -31,6 +31,7 @@
 
     <div id="preload" style="display:none;">
       <!-- ... if I list them all here I don't need to use a web server? -->
+      <img src="images/fly.png" id="fly">
       <img id="pf1" src="images/pf/1.png">
       <img id="pf2" src="images/pf/2.png">
       <img id="pf3" src="images/pf/3.png">
