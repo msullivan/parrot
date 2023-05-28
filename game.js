@@ -1,7 +1,7 @@
 (function() {
     //////////// Content?
     //////////// Constants and shit
-    const GROUND_HEIGHT = 32;
+    const GROUND_HEIGHT = 80;
     const DEFAULT_FPS = 60;
     const COIN_SIZE = 20;
     const BEAK_SIZE = 4;
@@ -116,6 +116,9 @@
     function getRandom(min, max) {
         return Math.random() * (max - min) + min;
     }
+    function pickRandom(opts) {
+        return opts[Math.floor(getRandom(0, opts.length))];
+    }
 
     function dot(ctx, color, pos, radius) {
         radius = radius || 4;
@@ -141,7 +144,11 @@
     const canvas_width = canvas.width;
     const canvas_height = canvas.height;
 
-    const bg = $("bg");
+    let groundSprites = [];
+    for (let i = 1; i <= 3; i++) {
+        groundSprites.push($("plant" + i));
+    }
+    let bg = groundSprites[2];
 
     let birdSprites = [];
     for (let i = 1; i <= 9; i++) {
@@ -329,14 +336,19 @@
         }
     };
 
-    class Cloud {
+    class Bg {
         constructor(obj) {
             for (let elem in obj) this[elem] = obj[elem];
-            this.sprite = cloudSprites[this.type];
-            this.offs = new Vec2(
-                -this.sprite.width/this.scale/2,
-                this.sprite.height/this.scale/2,
-            );
+            if (this.center) {
+                this.offs = new Vec2(
+                    -this.sprite.width/this.scale/2,
+                    this.sprite.height/this.scale/2,
+                );
+            } else {
+                this.offs = new Vec2(
+                    0, this.sprite.height/this.scale
+                );
+            }
         }
 
         move() {}
@@ -351,17 +363,19 @@
                 ...toScreen(this.offs),
                 sprite.width/this.scale, sprite.height/this.scale,
             );
+            // dot(ctx, "orange", new Vec2(0, 0), 4);
 
             ctx.restore();
         }
     };
 
     function makeCloud(x) {
-        return new Cloud({
+        return new Bg({
             p: new Vec2(x, getRandom(0.45*canvas_height, 0.95*canvas_height)),
             scale: 7,
-            type: Math.floor(getRandom(0, 3)),
+            sprite: pickRandom(cloudSprites),
             layer: 0,
+            center: true,
             zscale: 2,
         });
     }
@@ -378,6 +392,21 @@
         });
     }
 
+    function makeGround() {
+        let sprite = pickRandom(groundSprites);
+        let n = new Bg({
+            p: new Vec2(
+                game.nextGround,
+                -GROUND_HEIGHT,
+            ),
+            sprite: sprite,
+            layer: 3 + getRandom(-0.1, 0.1), // XXX too far forward?
+            zscale: 1,
+            scale: sprite.height/GROUND_HEIGHT,
+        });
+        game.nextGround += sprite.width/n.scale*0.9;
+        game.noobs.push(n);
+    }
 
     //////////////////////////////////////////////
     function gameSetup() {
@@ -402,29 +431,14 @@
             game.noobs.push(makeCloud(game.nextCloud));
             game.nextCloud += getRandom(250, 500);
         }
-    }
 
-    ///////////////////////////////////////////////
-    function getTiles(abbrevs, key) {
-        var l = abbrevs[key];
-        if (!l) return [];
-        return Array.isArray(l) ? l : [l];
-    }
-
-    function drawBg() {
-        const TILE = GROUND_HEIGHT;
-        for (var x = -1; x < canvas_width/TILE + 1; x++) {
-            const y = -1;
-
-            ctx.drawImage(
-                bg, 0, 0, bg.width, bg.height,
-                x*TILE - (game.birb.p.x % TILE),
-                yToScreen(y*TILE) - TILE,
-                TILE, TILE
-            )
+        game.nextGround = -canvas_width;
+        while (game.nextGround < canvas_width*2) {
+            makeGround();
         }
     }
 
+    ///////////////////////////////////////////////
     function draw() {
         // Draw blue background
         ctx.save();
@@ -435,8 +449,6 @@
         // Game state -- translated
         ctx.save();
         ctx.translate(0, canvas_height - GROUND_HEIGHT);
-
-        drawBg();
 
         // Sort by layers
         game.noobs.sort(function (n1, n2) {
@@ -469,6 +481,8 @@
 
         let spawnPoint = game.birb.p.x + canvas_width;
         let spawnPoint2 = game.birb.p.x/2 + canvas_width;
+
+        if (spawnPoint > game.nextGround) makeGround();
 
         if (spawnPoint > game.nextCoin) {
             let newc = makeCoin(game.nextCoin);
