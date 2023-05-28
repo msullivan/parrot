@@ -432,9 +432,22 @@
         return stopRunning;
     }
 
+    function setupDpr(canvas, ctx) {
+        var dpr = window.devicePixelRatio || 1;
+        let width = canvas.width;
+        let height = canvas.height;
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        ctx.scale(dpr, dpr);
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+    }
+
     function setupButtons() {
         let fly = $("fly_button");
         const flyctx = fly.getContext("2d");
+        setupDpr(fly, flyctx);
+
         flyctx.save();
         flyctx.fillStyle = "#aaaaaa";
         flyctx.fillRect(0, 0, fly.width, fly.height);
@@ -457,14 +470,8 @@
 
     function init() {
         $("fps").value = DEFAULT_FPS;
-        var dpr = window.devicePixelRatio || 1;
-        console.log("DPR: " + dpr);
 
-        canvas.width = canvas_width * dpr;
-        canvas.height = canvas_height * dpr;
-        ctx.scale(dpr, dpr);
-        canvas.style.width = canvas_width + 'px';
-        canvas.style.height = canvas_height + 'px';
+        setupDpr(canvas, ctx);
 
         canvas.renderOnAddRemove = false;
 
