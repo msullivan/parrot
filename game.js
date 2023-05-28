@@ -486,6 +486,10 @@
         game.noobs = game.noobs.filter(function (noob) {
             return noob.move() !== true;
         });
+        let n = game.noobs.length;
+        game.noobs = game.noobs.filter(function (noob) {
+            return noob.p.x > game.birb.p.x - canvas_width;
+        });
     }
 
     function now() { return performance.now(); }
