@@ -126,7 +126,7 @@
         constructor(obj) {
             this.moving = true;
             this.crashed = false;
-            this.steps = 0;
+            this.steps = FRAMES_PER*STOP_AFRAME;
             this.flapping = 0;
             this.v = new Vec2(SCROLL, 0);
 
@@ -178,7 +178,7 @@
 
             this.v = this.v.add(directions.down.scale(G));
 
-            if (this.flapping) {
+            if (this.flapping || this.getFrame() != STOP_AFRAME) {
                 this.steps++;
             }
 
