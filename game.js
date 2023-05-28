@@ -59,7 +59,7 @@
         new Vec2(1430, -545),
         new Vec2(1430, -545),
     ];
-    const PARROT_FEET_RAW = 925; // eh, approximate
+    const PARROT_FEET_RAW = 900; // eh, approximate
     const PARROT_SCALE = 10;
 
     const PARROT_BEAK = PARROT_BEAK_RAW.map(
@@ -74,6 +74,10 @@
     }
     function toScreen(v) {
         return [xToScreen(v.x), yToScreen(v.y)];
+    }
+
+    function getRandom(min, max) {
+        return Math.random() * (max - min) + min;
     }
 
     function dot(ctx, color, pos, radius) {
@@ -335,14 +339,16 @@
         if (game.birb.p.x > game.nextCoin) {
             let s = game.nextCoin == 0 ? 0.5 : 1;
             let newc = new Coin({
-                p: new Vec2(game.birb.p.x + s*canvas.width,
-                            Math.random()*(canvas.height-GROUND_HEIGHT)),
+                p: new Vec2(
+                    game.birb.p.x + s*canvas.width,
+                    getRandom(PARROT_FEET * 1.5, canvas.height-GROUND_HEIGHT),
+                ),
                 size: 20,
             });
             console.log("new coin at ", newc.p.x);
             game.noobs.push(newc);
             game.nextCoin = game.birb.p.x +
-                (Math.random()*0.3 + 0.2)*canvas.width;
+                getRandom(0.2, 0.5)*canvas.width;
         }
 
         game.noobs = game.noobs.filter(function (noob) {
