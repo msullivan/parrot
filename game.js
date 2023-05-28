@@ -70,6 +70,8 @@
         right: new Vec2(1, 0),
         up:    new Vec2(0, 1),
     };
+
+    const PARROT_CENTER_RAW = new Vec2(1110, -665);
     const PARROT_BEAK_RAW = [
         new Vec2(1425, -549),
         new Vec2(1425, -549),
@@ -87,9 +89,10 @@
     const PARROT_FEET_RAW = 900; // eh, approximate
     const PARROT_SCALE = 10;
 
+    const PARROT_CENTER = PARROT_CENTER_RAW.scale(1/PARROT_SCALE);
     const PARROT_BEAK = PARROT_BEAK_RAW.map(
         function (v) { return v.scale(1/PARROT_SCALE); });
-    const PARROT_FEET = PARROT_FEET_RAW / PARROT_SCALE;
+    const PARROT_FEET = (PARROT_FEET_RAW + PARROT_CENTER_RAW.y) / PARROT_SCALE;
 
     function deg(f) { return f * Math.PI / 180; }
 
@@ -224,7 +227,7 @@
             if (conf.LINE_PARROT) {
                 return new Vec2(0, 0);
             } else {
-                return PARROT_BEAK[this.getFrame()];
+                return PARROT_BEAK[this.getFrame()].sub(PARROT_CENTER);
             }
         }
         beakPos() { return this.p.add(this.beakOffset()); }
@@ -249,11 +252,17 @@
         renderSprite(ctx) {
             let scale = 2;
             let sprite = birdSprites[this.getFrame()];
+
+            ctx.save();
+            ctx.translate(...toScreen(this.p));
             ctx.drawImage(
                 sprite,
-                ...toScreen(this.p),
+                -PARROT_CENTER.x, PARROT_CENTER.y,
                 sprite.width/scale, sprite.height/scale,
             );
+
+            ctx.restore();
+
         }
 
         render(ctx) {
