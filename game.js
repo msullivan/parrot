@@ -332,7 +332,9 @@
             crashed: true,
             beakSize: BEAK_SIZE,
             headSize: HEAD_SIZE,
+            layer: 1,
         });
+        game.noobs.push(game.birb);
     }
 
     ///////////////////////////////////////////////
@@ -365,13 +367,14 @@
 
         drawBg();
 
-        // // Sort by y as a painters algorithm type thing.
-        // game.noobs.sort(function (n1, n2) { return n1.py - n2.py; });
+        // Sort by layers
+        game.noobs.sort(function (n1, n2) {
+            return -((n1.layer ?? 0) - (n2.layer ?? 0));
+        });
 
         ctx.save();
         ctx.translate(canvas_width/4 - game.birb.p.x, 0);
         game.noobs.forEach(function (noob) { noob.render(ctx); });
-        game.birb.render(ctx);
         ctx.restore();
 
         // Draw score
@@ -403,6 +406,7 @@
                               canvas_height-GROUND_HEIGHT-COIN_SIZE),
                 ),
                 size: COIN_SIZE,
+                layer: 0,
             });
             console.log("new coin at ", newc.p.x);
             game.noobs.push(newc);
@@ -413,7 +417,6 @@
         game.noobs = game.noobs.filter(function (noob) {
             return noob.move() !== true;
         });
-        game.birb.move();
     }
 
     function now() { return performance.now(); }
