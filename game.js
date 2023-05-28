@@ -313,8 +313,31 @@
                 // ctx.restore();
             }
         }
-
     };
+
+    class Hill {
+        // left, top, right
+        constructor(obj) {
+            // Is this bullshit?
+            for (let elem in obj) this[elem] = obj[elem];
+            this.p = this.right;
+        }
+
+        move() {}
+
+        render(ctx) {
+            //console.log(this);
+            ctx.save();
+            ctx.fillStyle = "green";
+            ctx.beginPath();
+            ctx.moveTo(...toScreen(this.left));
+            ctx.lineTo(...toScreen(this.top));
+            ctx.lineTo(...toScreen(this.right));
+            ctx.fill();
+            ctx.restore();
+        }
+    };
+
 
     class Coin {
         constructor(obj) {
@@ -417,6 +440,30 @@
         game.noobs.push(n);
     }
 
+    const HILL_ZSCALE = 4;
+    function makeHill() {
+        let left = new Vec2(game.nextHill, -GROUND_HEIGHT);
+        let langle = deg(getRandom(20, 45));
+        console.log(langle);
+        let lwidth = getRandom(0.4, 0.7)*canvas_width / 2;
+        let height = Math.tan(langle) * lwidth;
+        let rangle = getRandom(0.9, 1.1)*langle;
+        let rwidth = height/Math.tan(rangle);
+
+        let top = left.add(new Vec2(lwidth, height));
+        let right = left.add(new Vec2(lwidth+rwidth, 0));
+
+        let n = new Hill({
+            left: left,
+            top: top,
+            right: right,
+            layer: -1 + getRandom(-0.1, 0.1), // XXX too far forward?
+            zscale: HILL_ZSCALE,
+        });
+        game.nextHill += getRandom(0.25, 0.5)*(lwidth+rwidth);
+        game.noobs.push(n);
+    }
+
     //////////////////////////////////////////////
     function gameSetup() {
         game.birb = new Bird({
@@ -440,6 +487,10 @@
         game.nextGround = -canvas_width;
         while (game.nextGround < canvas_width*2) {
             makeGround();
+        }
+        game.nextHill = -canvas_width;
+        while (game.nextHill < canvas_width*2) {
+            makeHill();
         }
     }
 
@@ -486,10 +537,13 @@
 
         let spawnPoint = game.birb.p.x + canvas_width;
         let spawnPoint2 = game.birb.p.x/2 + canvas_width;
+        let spawnPointH = game.birb.p.x/HILL_ZSCALE + canvas_width;
 
         if (spawnPoint > game.nextGround) makeGround();
         if (spawnPoint > game.nextCoin) makeCoin();
         if (spawnPoint2 > game.nextCloud) makeCloud();
+        if (spawnPointH > game.nextHill) makeHill();
+
 
         game.noobs = game.noobs.filter(function (noob) {
             return noob.move() !== true;
