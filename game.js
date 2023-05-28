@@ -105,9 +105,7 @@
     function deg(f) { return f * Math.PI / 180; }
 
     function xToScreen(x) { return x; }
-    function yToScreen(y) {
-        return canvas_height - GROUND_HEIGHT - y;
-    }
+    function yToScreen(y) { return -y; }
     function toScreen(v) {
         return [xToScreen(v.x), yToScreen(v.y)];
     }
@@ -365,6 +363,10 @@
         ctx.fillRect(0, 0, canvas_width, canvas_height);
         ctx.restore();
 
+        // Game state -- translated
+        ctx.save();
+        ctx.translate(0, canvas_height - GROUND_HEIGHT);
+
         drawBg();
 
         // Sort by layers
@@ -375,6 +377,8 @@
         ctx.save();
         ctx.translate(canvas_width/4 - game.birb.p.x, 0);
         game.noobs.forEach(function (noob) { noob.render(ctx); });
+        ctx.restore();
+
         ctx.restore();
 
         // Draw score
