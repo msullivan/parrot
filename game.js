@@ -6,6 +6,7 @@
     const COIN_SIZE = 20;
     const BEAK_SIZE = 4;
     const HEAD_SIZE = 8;
+    const SPEED = 3.5;
 
     const CONFIG = {
         // LINE_PARROT: true,
@@ -22,6 +23,8 @@
                     val = elem.checked;
                 } else if (elem.className == "int") {
                     val = parseInt(elem.value);
+                } else if (elem.className == "float") {
+                    val = parseFloat(elem.value);
                 }
                 return val;
             } else {
@@ -151,7 +154,6 @@
 
     /////////////////////////////////////////////
 
-    const SCROLL = 2;
     const G = 0.2;
     const FLAP = 3;
     const FLAP_A = 0.5;
@@ -168,7 +170,7 @@
             this.crashed = false;
             this.steps = FRAMES_PER*STOP_AFRAME;
             this.flapping = 0;
-            this.v = new Vec2(SCROLL, 0);
+            this.v = new Vec2(conf.SPEED, 0);
 
             // Is this bullshit?
             for (let elem in obj) this[elem] = obj[elem];
@@ -195,7 +197,7 @@
                 this.v = new Vec2(0, 0);
                 if (!oldCrashed) game.score -= 3;
             } else if (oldCrashed) {
-                this.v.x = SCROLL; // XXX
+                this.v.x = conf.SPEED; // XXX
             }
 
             this.p = this.p.add(this.v);
@@ -543,6 +545,7 @@
 
     function init() {
         $("fps").value = DEFAULT_FPS;
+        $("speed").value = SPEED;
 
         setupDpr(canvas, ctx);
 
