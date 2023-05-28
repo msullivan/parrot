@@ -1,11 +1,7 @@
 (function() {
     //////////// Content?
     //////////// Constants and shit
-
-    var BG_TILE = 128;
-    var TILE = 32;
-    var X_TILES = 30;
-    var Y_TILES = 20;
+    const GROUND_HEIGHT = 32;
 
     /////////////// Functions?
 
@@ -51,7 +47,7 @@
 
     function xToScreen(x) { return x; }
     function yToScreen(y) {
-        return (TILE*(Y_TILES-1)) - y;
+        return canvas.height - GROUND_HEIGHT - y;
     }
     function toScreen(v) {
         return new Vec2(xToScreen(v.x), yToScreen(v.y));
@@ -225,7 +221,7 @@
     //////////////////////////////////////////////
     function gameSetup() {
         game.birb = new Bird({
-            p: new Vec2(0, 7*TILE),
+            p: new Vec2(0, canvas.height*0.40),
         });
         game.noobs.push(game.birb);
     }
@@ -238,11 +234,12 @@
     }
 
     function drawBg() {
-        for (var x = -1; x < X_TILES + 1; x++) {
+        const TILE = GROUND_HEIGHT;
+        for (var x = -1; x < canvas.width/TILE + 1; x++) {
             const y = -1;
 
             ctx.drawImage(
-                bg, 0, 0, BG_TILE, BG_TILE,
+                bg, 0, 0, bg.width, bg.height,
                 x*TILE - (game.birb.p.x % TILE),
                 yToScreen(y*TILE) - TILE,
                 TILE, TILE
@@ -263,7 +260,7 @@
         // game.noobs.sort(function (n1, n2) { return n1.py - n2.py; });
 
         ctx.save();
-        ctx.translate((X_TILES/4)*TILE - game.birb.p.x, 0);
+        ctx.translate(canvas.width/4 - game.birb.p.x, 0);
         game.noobs.forEach(function (noob) { noob.render(ctx); });
         ctx.restore();
 
@@ -291,7 +288,7 @@
             let s = game.nextCoin == 0 ? 0.5 : 1;
             let newc = new Coin({
                 p: new Vec2(game.birb.p.x + s*canvas.width,
-                            Math.random()*(canvas.height-TILE)),
+                            Math.random()*(canvas.height-GROUND_HEIGHT)),
                 size: 20,
             });
             console.log("new coin at ", newc.p.x);
