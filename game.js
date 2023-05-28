@@ -70,12 +70,19 @@
 
     const bg = $("bg");
 
+    let birdSprites = [];
+    for (let i = 1; i <= 9; i++) {
+        birdSprites.push($("pf" + i));
+    }
+
     /////////////////////////////////////////////
 
     const SCROLL = 2;
     const G = 0.2;
     const FLAP = 3;
     const FLAP_A = 0.5;
+
+    const STOP_FRAME = 5;
 
     ////////////////////////////////////////////////////////////
     class Bird {
@@ -93,6 +100,10 @@
 
         setFlapping(flapping) {
             this.flapping = flapping;
+        }
+
+        getFrame() {
+            return Math.floor(this.steps / 3) % 9;
         }
 
         move() {
@@ -126,7 +137,7 @@
                 }
             }
 
-            this.v = this.v.add(directions.down.scale(G))
+            this.v = this.v.add(directions.down.scale(G));
 
             if (this.flapping) {
                 this.steps++;
@@ -143,7 +154,7 @@
             this.wing_angle = deg(lo + (hi-lo)*(cnt/N));
         }
 
-        render(ctx) {
+        renderLines(ctx) {
             //console.log(this);
             ctx.save();
             ctx.strokeStyle = "green";
@@ -156,9 +167,33 @@
             ctx.lineTo(0, 0);
             ctx.lineTo(-Math.cos(wangle)*len, Math.sin(wangle)*len);
             ctx.stroke();
-
             ctx.restore();
         }
+
+        renderSprite(ctx) {
+            let scale = 2;
+            let sprite = birdSprites[this.getFrame()];
+            ctx.drawImage(
+                sprite,
+                // 0, 0, sprite.width, sprite.height,
+                // 317, 40, 1300, 1150,
+                xToScreen(this.p.x),
+                yToScreen(this.p.y),
+                // 17*scale, 11*scale
+                sprite.width/scale, sprite.height/scale,
+            );
+
+            ctx.save();
+            ctx.fillStyle = "green";
+            ctx.beginPath();
+            ctx.ellipse(xToScreen(this.p.x), yToScreen(this.p.y),
+                        4, 4, 0, 0, 2*Math.PI);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        render(ctx) { this.renderSprite(ctx) }
+
     };
 
     class Coin {
@@ -228,7 +263,7 @@
         // game.noobs.sort(function (n1, n2) { return n1.py - n2.py; });
 
         ctx.save();
-        ctx.translate((X_TILES/4)*TILE -  game.birb.p.x, 0);
+        ctx.translate((X_TILES/4)*TILE - game.birb.p.x, 0);
         game.noobs.forEach(function (noob) { noob.render(ctx); });
         ctx.restore();
 
@@ -306,6 +341,8 @@
     }
 
     function init() {
+        console.log("DPR: " + window.devicePixelRatio);
+
         canvas.renderOnAddRemove = false;
 
         gameSetup();
