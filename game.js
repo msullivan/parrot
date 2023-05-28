@@ -414,7 +414,7 @@
         // });
 
         $("loading").textContent = "";
-        stopRunning = runAtFramerate(tick, draw, 30);
+        stopRunning = runAtFramerate(tick, draw, 60);
     }
     window.onload = init;
 
