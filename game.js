@@ -369,18 +369,24 @@
         }
     };
 
-    function makeCloud(x) {
-        return new Bg({
-            p: new Vec2(x, getRandom(0.45*canvas_height, 0.95*canvas_height)),
+    function makeCloud() {
+        let c = new Bg({
+            p: new Vec2(
+                game.nextCloud,
+                getRandom(0.4, 0.85)*canvas_height,
+            ),
             scale: 7,
             sprite: pickRandom(cloudSprites),
             layer: 0,
             center: true,
             zscale: 2,
         });
+        game.noobs.push(c);
+        game.nextCloud += getRandom(0.1, 0.5)*canvas_width;
+        // console.log("new cloud at ", c.p.x);
     }
-    function makeCoin(x) {
-        return new Coin({
+    function makeCoin() {
+        let c = new Coin({
             p: new Vec2(
                 game.nextCoin,
                 getRandom(PARROT_FEET * 1.5,
@@ -390,6 +396,9 @@
             layer: 0.5,
             zscale: 1,
         });
+        game.noobs.push(c);
+        game.nextCoin += getRandom(0.2, 0.5)*canvas_width;
+        // console.log("new coin at ", c.p.x);
     }
 
     function makeGround() {
@@ -420,18 +429,14 @@
         });
         game.noobs.push(game.birb);
 
-        // XXX bad approach
         game.nextCoin = 500;
         for (let i = 0; i < 5; i++) {
-            game.noobs.push(makeCoin(game.nextCoin));
-            game.nextCoin += getRandom(0.2, 0.5)*canvas_width;
+            makeCoin();
         }
-        game.nextCloud = 300;
-        for (let i = 0; i < 5; i++) {
-            game.noobs.push(makeCloud(game.nextCloud));
-            game.nextCloud += getRandom(250, 500);
+        game.nextCloud = -canvas_width;
+        while (game.nextCloud < canvas_width*2) {
+            makeCloud();
         }
-
         game.nextGround = -canvas_width;
         while (game.nextGround < canvas_width*2) {
             makeGround();
@@ -483,19 +488,8 @@
         let spawnPoint2 = game.birb.p.x/2 + canvas_width;
 
         if (spawnPoint > game.nextGround) makeGround();
-
-        if (spawnPoint > game.nextCoin) {
-            let newc = makeCoin(game.nextCoin);
-            game.nextCoin = spawnPoint + getRandom(0.2, 0.5)*canvas_width;
-            game.noobs.push(newc);
-            // console.log("new coin at ", newc.p.x);
-        }
-        if (spawnPoint2 > game.nextCloud) {
-            let newc = makeCloud(game.nextCloud);
-            game.nextCloud += getRandom(250, 500);
-            game.noobs.push(newc);
-            // console.log("new cloud at ", newc.p.x);
-        }
+        if (spawnPoint > game.nextCoin) makeCoin();
+        if (spawnPoint2 > game.nextCloud) makeCloud();
 
         game.noobs = game.noobs.filter(function (noob) {
             return noob.move() !== true;
