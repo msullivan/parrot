@@ -439,11 +439,11 @@
             // audio.pause();
             stopRunning();
         });
-        canvas.addEventListener(
+        document.addEventListener(
             "touchstart", function(ev) { touch(ev, true) });
-        canvas.addEventListener(
+        document.addEventListener(
             "touchend", function(ev) { touch(ev, false) });
-        canvas.addEventListener(
+        document.addEventListener(
             "touchcancel", function(ev) { touch(ev, false) });
 
         // kd.M.press(function() {
