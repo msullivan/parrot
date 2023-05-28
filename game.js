@@ -458,13 +458,6 @@
         ctx.fillText(game.score.toString(), 20, 50);
     }
 
-    // function getKbdDirection() {
-    //     if (kd.W.isDown() || kd.UP.isDown()) return 'up';
-    //     if (kd.A.isDown() || kd.LEFT.isDown()) return 'left';
-    //     if (kd.D.isDown() || kd.RIGHT.isDown()) return 'right';
-    //     if (kd.S.isDown() || kd.DOWN.isDown()) return 'down';
-    //     return null;
-    // }
     var touched = false;
     function touch(ev, on) {
         ev.preventDefault();
