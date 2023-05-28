@@ -62,6 +62,13 @@
         angle() {
             return Math.atan2(this.y, this.x);
         }
+        rotate(theta) {
+            return new Vec2(
+                this.x*Math.cos(theta) - this.y*Math.sin(theta),
+                this.x*Math.sin(theta) + this.y*Math.cos(theta),
+            );
+        }
+
     }
 
     const directions = {
@@ -71,7 +78,8 @@
         up:    new Vec2(0, 1),
     };
 
-    const PARROT_CENTER_RAW = new Vec2(1110, -665);
+    const PARROT_CENTER_RAW = new Vec2(1210, -607);
+    console.log(PARROT_CENTER_RAW.y);
     const PARROT_BEAK_RAW = [
         new Vec2(1425, -549),
         new Vec2(1425, -549),
@@ -223,15 +231,25 @@
             this.wing_angle = deg(lo + (hi-lo)*(cnt/N));
         }
 
-        beakOffset() {
+        flightAngle() {
+            return this.crashed ? 0 : -this.v.angle() + deg(27);
+        }
+
+        rawBeakOffset() {
             if (conf.LINE_PARROT) {
                 return new Vec2(0, 0);
             } else {
                 return PARROT_BEAK[this.getFrame()].sub(PARROT_CENTER);
             }
         }
+        beakOffset() {
+            return this.rawBeakOffset().rotate(-this.flightAngle());
+        }
         beakPos() { return this.p.add(this.beakOffset()); }
-        headPos() { return this.beakPos().sub(new Vec2(10, -2)); }
+        headPos() {
+            return this.rawBeakOffset().sub(new Vec2(10, -2))
+                .rotate(-this.flightAngle()).add(this.p);
+        }
 
         renderLines(ctx) {
             //console.log(this);
@@ -255,6 +273,7 @@
 
             ctx.save();
             ctx.translate(...toScreen(this.p));
+            ctx.rotate(this.flightAngle());
             ctx.drawImage(
                 sprite,
                 -PARROT_CENTER.x, PARROT_CENTER.y,
