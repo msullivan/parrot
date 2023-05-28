@@ -540,15 +540,6 @@
 
     function setupButtons() {
         let fly = $("fly_button");
-        const flyctx = fly.getContext("2d");
-        setupDpr(fly, flyctx);
-
-        flyctx.save();
-        flyctx.fillStyle = "#aaaaaa";
-        flyctx.fillRect(0, 0, fly.width, fly.height);
-        flyctx.restore();
-        flyctx.font = "48px sans";
-        flyctx.fillText("Fly!", 50, 65);
 
         const ON = ["touchstart", "mousedown"];
         const OFF = ["touchend", "touchcancel", "mouseup", "mouseout"];
