@@ -1,7 +1,8 @@
 (function() {
     //////////// Content?
     //////////// Constants and shit
-    const GROUND_HEIGHT = 80;
+    const GROUND_HEIGHT = 60;
+    const GROUND_HEIGHT_DRAWN = 80;
     const DEFAULT_FPS = 60;
     const COIN_SIZE = 20;
     const BEAK_SIZE = 4;
@@ -432,9 +433,11 @@
                 -GROUND_HEIGHT,
             ),
             sprite: sprite,
-            layer: 3 + getRandom(-0.1, 0.1), // XXX too far forward?
+            // Put the ground in front of the bird so it kind of looks
+            // like we land in them
+            layer: 3 + getRandom(-0.1, 0.1),
             zscale: 1,
-            scale: sprite.height/GROUND_HEIGHT,
+            scale: sprite.height/GROUND_HEIGHT_DRAWN,
         });
         game.nextGround += sprite.width/n.scale*0.9;
         game.noobs.push(n);
