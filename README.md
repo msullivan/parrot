@@ -1,1 +1,6 @@
-Agreed to throw together a game to go with Charlie's OST...?
+Parrot!
+
+A BS Studios Production
+
+Art: Aruna Bolisetty
+Programming: Michael J. Sullivan
