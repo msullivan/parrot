@@ -7,12 +7,19 @@
     <script type="text/javascript" src="https://jeremyckahn.github.io/keydrown/dist/keydrown.min.js"></script>
     <style type="text/css">
       canvas { border: 1px solid black; }
+      .int {display: table-cell; width: 2.5em;}
     </style>
   </head>
   <body>
     <canvas id="game" width="960" height="640"></canvas>
     <div id="directions">
       Spacebar: fly<br>
+    </div>
+
+    <div id="debug_config">
+      <input type="checkbox" id="debug_dots" class="bool"> Show debug dots<br>
+      <input type="checkbox" id="line_parrot" class="bool"> Use line parrot<br>
+      <input type="number" id="fps" maxlength="2" class="int"> Target FPS<br>
     </div>
 
     <div id="loading">Loading...</div>

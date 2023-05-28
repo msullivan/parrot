@@ -2,9 +2,31 @@
     //////////// Content?
     //////////// Constants and shit
     const GROUND_HEIGHT = 32;
+    const DEFAULT_FPS = 60;
 
-    const LINE_PARROT = false;
-    const DEBUG_DOTS = false;
+    const CONFIG = {
+        // LINE_PARROT: true,
+        // DEBUG_DOTS: true,
+        // FPS: 30,
+    };
+
+    let configHandler = {
+        get(target, name) {
+            if (target[name] === undefined) {
+                let elem = $(name.toLowerCase());
+                let val;
+                if (elem.className == "bool") {
+                    val = elem.checked;
+                } else if (elem.className == "int") {
+                    val = parseInt(elem.value);
+                }
+                return val;
+            } else {
+                return target[name];
+            }
+        }
+    };
+    let conf = new Proxy(CONFIG, configHandler);
 
     /////////////// Functions?
 
@@ -147,7 +169,7 @@
             if (!this.moving) return;
 
             let oldCrashed = this.crashed;
-            const feet = LINE_PARROT ? 0 : PARROT_FEET;
+            const feet = conf.LINE_PARROT ? 0 : PARROT_FEET;
             this.crashed = this.p.y <= feet;
             if (this.crashed) {
                 this.steps = CRASH_AFRAME * FRAMES_PER;
@@ -194,7 +216,7 @@
         }
 
         beakOffset() {
-            if (LINE_PARROT) {
+            if (conf.LINE_PARROT) {
                 return new Vec2(0, 0);
             } else {
                 return PARROT_BEAK[this.getFrame()];
@@ -232,9 +254,9 @@
         }
 
         render(ctx) {
-            LINE_PARROT ? this.renderLines(ctx) : this.renderSprite(ctx);
+            conf.LINE_PARROT ? this.renderLines(ctx) : this.renderSprite(ctx);
 
-            if (DEBUG_DOTS) {
+            if (conf.DEBUG_DOTS) {
                 dot(ctx, "green", this.p);
                 dot(ctx, "blue", this.beakPos());
 
@@ -360,13 +382,13 @@
     function now() { return performance.now(); }
 
     // this is fucked up
-    function runAtFramerate(tick, draw, fps) {
-        var interval = Math.floor(1000/fps);
+    function runAtFramerate(tick, draw, getFps) {
         var last = 0;
         var lastReal = 0;
         var stop = false;
         function cb() {
             if (stop) return;
+            var interval = Math.floor(1000/getFps());
 
             if (last == null) return;
             var start = now();
@@ -393,6 +415,7 @@
     }
 
     function init() {
+        $("fps").value = DEFAULT_FPS;
         console.log("DPR: " + window.devicePixelRatio);
 
         canvas.renderOnAddRemove = false;
@@ -420,7 +443,8 @@
         // });
 
         $("loading").textContent = "";
-        stopRunning = runAtFramerate(tick, draw, 60);
+        stopRunning = runAtFramerate(
+            tick, draw, function() { return conf.FPS });
     }
     window.onload = init;
 
