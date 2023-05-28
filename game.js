@@ -95,7 +95,7 @@
 
     function xToScreen(x) { return x; }
     function yToScreen(y) {
-        return canvas.height - GROUND_HEIGHT - y;
+        return canvas_height - GROUND_HEIGHT - y;
     }
     function toScreen(v) {
         return [xToScreen(v.x), yToScreen(v.y)];
@@ -126,6 +126,8 @@
 
     const canvas = $("game");
     const ctx = canvas.getContext("2d");
+    const canvas_width = canvas.width;
+    const canvas_height = canvas.height;
 
     const bg = $("bg");
 
@@ -249,10 +251,7 @@
             let sprite = birdSprites[this.getFrame()];
             ctx.drawImage(
                 sprite,
-                // 0, 0, sprite.width, sprite.height,
-                // 317, 40, 1300, 1150,
                 ...toScreen(this.p),
-                // 17*scale, 11*scale
                 sprite.width/scale, sprite.height/scale,
             );
         }
@@ -317,7 +316,7 @@
 
     function drawBg() {
         const TILE = GROUND_HEIGHT;
-        for (var x = -1; x < canvas.width/TILE + 1; x++) {
+        for (var x = -1; x < canvas_width/TILE + 1; x++) {
             const y = -1;
 
             ctx.drawImage(
@@ -333,7 +332,7 @@
         // Draw blue background
         ctx.save();
         ctx.fillStyle = "#87CEEB";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, canvas_width, canvas_height);
         ctx.restore();
 
         drawBg();
@@ -342,7 +341,7 @@
         // game.noobs.sort(function (n1, n2) { return n1.py - n2.py; });
 
         ctx.save();
-        ctx.translate(canvas.width/4 - game.birb.p.x, 0);
+        ctx.translate(canvas_width/4 - game.birb.p.x, 0);
         game.noobs.forEach(function (noob) { noob.render(ctx); });
         game.birb.render(ctx);
         ctx.restore();
@@ -371,16 +370,16 @@
             let s = game.nextCoin < 0 ? 0.5 : 1;
             let newc = new Coin({
                 p: new Vec2(
-                    game.birb.p.x + s*canvas.width,
+                    game.birb.p.x + s*canvas_width,
                     getRandom(PARROT_FEET * 1.5,
-                              canvas.height-GROUND_HEIGHT-COIN_SIZE),
+                              canvas_height-GROUND_HEIGHT-COIN_SIZE),
                 ),
                 size: COIN_SIZE,
             });
             console.log("new coin at ", newc.p.x);
             game.noobs.push(newc);
             game.nextCoin = game.birb.p.x +
-                getRandom(0.2, 0.5)*canvas.width;
+                getRandom(0.2, 0.5)*canvas_width;
         }
 
         game.noobs = game.noobs.filter(function (noob) {
@@ -449,7 +448,14 @@
 
     function init() {
         $("fps").value = DEFAULT_FPS;
-        console.log("DPR: " + window.devicePixelRatio);
+        var dpr = window.devicePixelRatio || 1;
+        console.log("DPR: " + dpr);
+
+        canvas.width = canvas_width * dpr;
+        canvas.height = canvas_height * dpr;
+        ctx.scale(dpr, dpr);
+        canvas.style.width = canvas_width + 'px';
+        canvas.style.height = canvas_height + 'px';
 
         canvas.renderOnAddRemove = false;
 
