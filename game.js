@@ -122,7 +122,7 @@
     var $ = function(s) { return document.getElementById(s); };
 
     // Lol.
-    var game = {birb: null, noobs: [], nextCoin: 0.0, score: 0};
+    var game = {birb: null, noobs: [], nextCoin: -1, score: 0};
 
     const canvas = $("game");
     const ctx = canvas.getContext("2d");
@@ -301,7 +301,8 @@
     //////////////////////////////////////////////
     function gameSetup() {
         game.birb = new Bird({
-            p: new Vec2(0, canvas.height*0.40),
+            p: new Vec2(0, PARROT_FEET),
+            crashed: true,
             beakSize: BEAK_SIZE,
             headSize: HEAD_SIZE,
         });
@@ -367,7 +368,7 @@
     function tick(time) {
         game.birb.setFlapping(kd.SPACE.isDown() || touched);
         if (game.birb.p.x > game.nextCoin) {
-            let s = game.nextCoin == 0 ? 0.5 : 1;
+            let s = game.nextCoin < 0 ? 0.5 : 1;
             let newc = new Coin({
                 p: new Vec2(
                     game.birb.p.x + s*canvas.width,
