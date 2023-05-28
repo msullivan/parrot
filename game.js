@@ -362,6 +362,7 @@
             scale: 7,
             type: Math.floor(getRandom(0, 3)),
             layer: 0,
+            zscale: 2,
         });
     }
     function makeCoin(x) {
@@ -373,6 +374,7 @@
             ),
             size: COIN_SIZE,
             layer: 0.5,
+            zscale: 1,
         });
     }
 
@@ -385,6 +387,7 @@
             beakSize: BEAK_SIZE,
             headSize: HEAD_SIZE,
             layer: 1,
+            zscale: 1,
         });
         game.noobs.push(game.birb);
 
@@ -440,10 +443,13 @@
             return ((n1.layer ?? 0) - (n2.layer ?? 0));
         });
 
-        ctx.save();
-        ctx.translate(canvas_width/4 - game.birb.p.x, 0);
-        game.noobs.forEach(function (noob) { noob.render(ctx); });
-        ctx.restore();
+        // ctx.translate(canvas_width/4 - game.birb.p.x, 0);
+        game.noobs.forEach(function (noob) {
+            ctx.save();
+            ctx.translate(canvas_width/4 - game.birb.p.x/noob.zscale, 0);
+            noob.render(ctx);
+            ctx.restore();
+        });
 
         ctx.restore();
 
@@ -469,6 +475,7 @@
         game.birb.setFlapping(kd.SPACE.isDown() || touched);
 
         let spawnPoint = game.birb.p.x + canvas_width;
+        let spawnPoint2 = game.birb.p.x/2 + canvas_width;
 
         if (spawnPoint > game.nextCoin) {
             let newc = makeCoin(game.nextCoin);
@@ -476,7 +483,7 @@
             game.noobs.push(newc);
             // console.log("new coin at ", newc.p.x);
         }
-        if (spawnPoint > game.nextCloud) {
+        if (spawnPoint2 > game.nextCloud) {
             let newc = makeCloud(game.nextCloud);
             game.nextCloud += getRandom(250, 500);
             game.noobs.push(newc);
@@ -488,7 +495,7 @@
         });
         let n = game.noobs.length;
         game.noobs = game.noobs.filter(function (noob) {
-            return noob.p.x > game.birb.p.x - canvas_width;
+            return noob.p.x > game.birb.p.x/noob.zscale - canvas_width;
         });
     }
 
