@@ -3,6 +3,9 @@
     //////////// Constants and shit
     const GROUND_HEIGHT = 32;
     const DEFAULT_FPS = 60;
+    const COIN_SIZE = 20;
+    const BEAK_SIZE = 4;
+    const HEAD_SIZE = 8;
 
     const CONFIG = {
         // LINE_PARROT: true,
@@ -223,6 +226,7 @@
             }
         }
         beakPos() { return this.p.add(this.beakOffset()); }
+        headPos() { return this.beakPos().sub(new Vec2(10, -2)); }
 
         renderLines(ctx) {
             //console.log(this);
@@ -258,7 +262,8 @@
 
             if (conf.DEBUG_DOTS) {
                 dot(ctx, "green", this.p);
-                dot(ctx, "blue", this.beakPos());
+                dot(ctx, "blue", this.beakPos(), this.beakSize);
+                dot(ctx, "blue", this.headPos(), this.headSize);
 
                 // ctx.save();
                 // ctx.strokeStyle = "orange";
@@ -281,7 +286,8 @@
         }
 
         move() {
-            if (game.birb.beakPos().sub(this.p).mag() <= this.size*1.1) {
+            let birb = game.birb;
+            if (birb.beakPos().sub(this.p).mag() <= this.size+birb.beakSize) {
                 game.score++;
                 return true;
             }
@@ -296,6 +302,8 @@
     function gameSetup() {
         game.birb = new Bird({
             p: new Vec2(0, canvas.height*0.40),
+            beakSize: BEAK_SIZE,
+            headSize: HEAD_SIZE,
         });
     }
 
@@ -363,9 +371,10 @@
             let newc = new Coin({
                 p: new Vec2(
                     game.birb.p.x + s*canvas.width,
-                    getRandom(PARROT_FEET * 1.5, canvas.height-GROUND_HEIGHT),
+                    getRandom(PARROT_FEET * 1.5,
+                              canvas.height-GROUND_HEIGHT-COIN_SIZE),
                 ),
-                size: 20,
+                size: COIN_SIZE,
             });
             console.log("new coin at ", newc.p.x);
             game.noobs.push(newc);
