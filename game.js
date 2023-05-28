@@ -3,6 +3,9 @@
     //////////// Constants and shit
     const GROUND_HEIGHT = 32;
 
+    const LINE_PARROT = false;
+    const DEBUG_DOTS = false;
+
     /////////////// Functions?
 
     class Vec2 {
@@ -23,27 +26,47 @@
             return this.x*rhs.x + this.y*rhs.y;
         }
         mag2() {
-            return this.dot(this)
+            return this.dot(this);
         }
         mag() {
             return Math.sqrt(this.mag2())
         }
         norm() {
-            return this.scale(1/this.mag())
+            return this.scale(1/this.mag());
         }
         angle() {
             return Math.atan2(this.y, this.x);
         }
     }
 
-    var directions = {
+    const directions = {
         down:  new Vec2(0, -1),
         left:  new Vec2(-1, 0),
         right: new Vec2(1, 0),
         up:    new Vec2(0, 1),
     };
+    const PARROT_BEAK_RAW = [
+        new Vec2(1425, -549),
+        new Vec2(1425, -549),
 
-    function deg(f) { return f * Math.PI / 180 }
+        new Vec2(1481, -493),
+        new Vec2(1481, -493),
+
+        new Vec2(1422, -545),
+
+        new Vec2(1430, -545),
+        new Vec2(1430, -545),
+        new Vec2(1430, -545),
+        new Vec2(1430, -545),
+    ];
+    const PARROT_FEET_RAW = 925; // eh, approximate
+    const PARROT_SCALE = 10;
+
+    const PARROT_BEAK = PARROT_BEAK_RAW.map(
+        function (v) { return v.scale(1/PARROT_SCALE); });
+    const PARROT_FEET = PARROT_FEET_RAW / PARROT_SCALE;
+
+    function deg(f) { return f * Math.PI / 180; }
 
     function xToScreen(x) { return x; }
     function yToScreen(y) {
@@ -52,6 +75,17 @@
     function toScreen(v) {
         return [xToScreen(v.x), yToScreen(v.y)];
     }
+
+    function dot(ctx, color, pos, radius) {
+        radius = radius || 4;
+        ctx.save();
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.ellipse(...toScreen(pos), radius, radius, 0, 0, 2*Math.PI);
+        ctx.fill();
+        ctx.restore();
+    }
+
 
     /////////////// Globals?
 
@@ -78,7 +112,10 @@
     const FLAP = 3;
     const FLAP_A = 0.5;
 
-    const STOP_FRAME = 5;
+    const FRAMES_PER = 3
+    const AFRAMES = 9;
+    const STOP_AFRAME = 5;
+    const CRASH_AFRAME = 8;
 
     ////////////////////////////////////////////////////////////
     class Bird {
@@ -99,16 +136,18 @@
         }
 
         getFrame() {
-            return Math.floor(this.steps / 3) % 9;
+            return Math.floor(this.steps / FRAMES_PER) % AFRAMES;
         }
 
         move() {
             if (!this.moving) return;
 
             let oldCrashed = this.crashed;
-            this.crashed = this.p.y <= 0;
+            const feet = LINE_PARROT ? 0 : PARROT_FEET;
+            this.crashed = this.p.y <= feet;
             if (this.crashed) {
-                this.p.y = 0;
+                this.steps = CRASH_AFRAME * FRAMES_PER;
+                this.p.y = feet;
                 this.v = new Vec2(0, 0);
                 if (!oldCrashed) game.score -= 3;
             } else if (oldCrashed) {
@@ -139,7 +178,7 @@
                 this.steps++;
             }
 
-            // Manage bird angle
+            // Manage wing angle
             const N = 20;
             let cnt = this.steps % (N*2);
             if (cnt > N) {
@@ -149,6 +188,15 @@
             const hi = 50;
             this.wing_angle = deg(lo + (hi-lo)*(cnt/N));
         }
+
+        beakOffset() {
+            if (LINE_PARROT) {
+                return new Vec2(0, 0);
+            } else {
+                return PARROT_BEAK[this.getFrame()];
+            }
+        }
+        beakPos() { return this.p.add(this.beakOffset()); }
 
         renderLines(ctx) {
             //console.log(this);
@@ -177,16 +225,25 @@
                 // 17*scale, 11*scale
                 sprite.width/scale, sprite.height/scale,
             );
-
-            ctx.save();
-            ctx.fillStyle = "green";
-            ctx.beginPath();
-            ctx.ellipse(...toScreen(this.p), 4, 4, 0, 0, 2*Math.PI);
-            ctx.fill();
-            ctx.restore();
         }
 
-        render(ctx) { this.renderSprite(ctx) }
+        render(ctx) {
+            LINE_PARROT ? this.renderLines(ctx) : this.renderSprite(ctx);
+
+            if (DEBUG_DOTS) {
+                dot(ctx, "green", this.p);
+                dot(ctx, "blue", this.beakPos());
+
+                // ctx.save();
+                // ctx.strokeStyle = "orange";
+                // ctx.translate(...toScreen(this.p));
+                // ctx.beginPath();
+                // ctx.moveTo(birdSprites[0].width/2, PARROT_FEET);
+                // ctx.lineTo(0, PARROT_FEET);
+                // ctx.stroke();
+                // ctx.restore();
+            }
+        }
 
     };
 
@@ -198,21 +255,14 @@
         }
 
         move() {
-            if (game.birb.p.sub(this.p).mag() <= this.size) {
+            if (game.birb.beakPos().sub(this.p).mag() <= this.size*1.1) {
                 game.score++;
                 return true;
             }
         }
 
         render(ctx) {
-            ctx.save();
-            ctx.fillStyle = "#FFC800";
-            ctx.beginPath();
-            ctx.ellipse(
-                ...toScreen(this.p), this.size, this.size, 0, 0, 2*Math.PI);
-            ctx.fill();
-
-            ctx.restore();
+            dot(ctx, "#FFC800", this.p, this.size);
         }
     };
 
@@ -221,7 +271,6 @@
         game.birb = new Bird({
             p: new Vec2(0, canvas.height*0.40),
         });
-        game.noobs.push(game.birb);
     }
 
     ///////////////////////////////////////////////
@@ -260,6 +309,7 @@
         ctx.save();
         ctx.translate(canvas.width/4 - game.birb.p.x, 0);
         game.noobs.forEach(function (noob) { noob.render(ctx); });
+        game.birb.render(ctx);
         ctx.restore();
 
         // Draw score
@@ -298,6 +348,7 @@
         game.noobs = game.noobs.filter(function (noob) {
             return noob.move() !== true;
         });
+        game.birb.move();
     }
 
     function now() { return performance.now(); }
