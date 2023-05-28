@@ -144,6 +144,10 @@
     for (let i = 1; i <= 9; i++) {
         birdSprites.push($("pf" + i));
     }
+    let cloudSprites = [];
+    for (let i = 1; i <= 3; i++) {
+        cloudSprites.push($("cloud" + i));
+    }
 
     /////////////////////////////////////////////
 
@@ -323,6 +327,42 @@
         }
     };
 
+    class Cloud {
+        constructor(obj) {
+            for (let elem in obj) this[elem] = obj[elem];
+            this.sprite = cloudSprites[this.type];
+            this.offs = new Vec2(
+                -this.sprite.width/this.scale/2,
+                this.sprite.height/this.scale/2,
+            );
+        }
+
+        move() {}
+
+        render(ctx) {
+            let sprite = this.sprite;
+
+            ctx.save();
+            ctx.translate(...toScreen(this.p));
+            ctx.drawImage(
+                sprite,
+                ...toScreen(this.offs),
+                sprite.width/this.scale, sprite.height/this.scale,
+            );
+
+            ctx.restore();
+        }
+    };
+
+    function makeCloud(x) {
+        return new Cloud({
+            p: new Vec2(x, getRandom(0.45*canvas_height, 0.95*canvas_height)),
+            scale: 7,
+            type: Math.floor(getRandom(0, 3)),
+            layer: 0,
+        });
+    }
+
     //////////////////////////////////////////////
     function gameSetup() {
         game.birb = new Bird({
@@ -333,6 +373,13 @@
             layer: 1,
         });
         game.noobs.push(game.birb);
+
+        // XXX bad approach
+        let next = 300;
+        for (let i = 0; i < 100; i++) {
+            game.noobs.push(makeCloud(next));
+            next += getRandom(250, 500);
+        }
     }
 
     ///////////////////////////////////////////////
@@ -371,7 +418,7 @@
 
         // Sort by layers
         game.noobs.sort(function (n1, n2) {
-            return -((n1.layer ?? 0) - (n2.layer ?? 0));
+            return ((n1.layer ?? 0) - (n2.layer ?? 0));
         });
 
         ctx.save();
@@ -410,7 +457,7 @@
                               canvas_height-GROUND_HEIGHT-COIN_SIZE),
                 ),
                 size: COIN_SIZE,
-                layer: 0,
+                layer: 0.5,
             });
             console.log("new coin at ", newc.p.x);
             game.noobs.push(newc);
