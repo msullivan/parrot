@@ -104,11 +104,18 @@
                 this.p.y = 0;
                 this.v = new Vec2(0, 0);
                 if (!oldCrashed) game.score -= 3;
-            } else {
+            } else if (oldCrashed) {
                 this.v.x = SCROLL; // XXX
             }
 
             this.p = this.p.add(this.v);
+
+            // XXX: Debug! Sideways velocity!
+            var side = 0;
+            if (kd.A.isDown() || kd.LEFT.isDown()) side -= 0.2;
+            if (kd.D.isDown() || kd.RIGHT.isDown()) side += 0.2;
+            this.v = this.v.add(directions.right.scale(side));
+            // console.log(this.v.x + ", " + this.v.y);
 
             if (this.flapping) {
                 let amt = G;
