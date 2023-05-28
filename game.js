@@ -83,7 +83,6 @@
     };
 
     const PARROT_CENTER_RAW = new Vec2(1210, -607);
-    console.log(PARROT_CENTER_RAW.y);
     const PARROT_BEAK_RAW = [
         new Vec2(1425, -549),
         new Vec2(1425, -549),
@@ -447,7 +446,6 @@
     function makeHill() {
         let left = new Vec2(game.nextHill, -GROUND_HEIGHT);
         let langle = deg(getRandom(20, 45));
-        console.log(langle);
         let lwidth = getRandom(0.4, 0.7)*canvas_width / 2;
         let height = Math.tan(langle) * lwidth;
         let rangle = getRandom(0.9, 1.1)*langle;
@@ -609,7 +607,6 @@
         const ON = ["touchstart", "mousedown"];
         const OFF = ["touchend", "touchcancel", "mouseup", "mouseout"];
         ON.forEach(function(on) {
-            console.log("ON", on);
             fly.addEventListener(
                 on, function(ev) { touch(ev, true) });
         });
