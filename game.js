@@ -5,7 +5,7 @@
     var BG_TILE = 128;
     var TILE = 32;
     var X_TILES = 30;
-    var Y_TILES = 24;
+    var Y_TILES = 20;
 
     /////////////// Functions?
 
