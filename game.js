@@ -14,6 +14,7 @@
         // DEBUG_DOTS: true,
         // FPS: 30,
         // DEBUG_MOVEMENT: true,
+        // SHOW_FPS: true,
     };
 
     let configHandler = {
@@ -745,14 +746,18 @@
         frameCount++;
         if (now >= lastSampleTime + SAMPLE_PERIOD) {
             let measuredFps = frameCount / (now - lastSampleTime) * 1000;
-            $("fps_meter").innerHTML = "FPS: "+Math.round(measuredFps);
+            if (conf.SHOW_FPS) {
+                $("fps_meter").innerHTML = "FPS: "+Math.round(measuredFps);
+            } else {
+                $("fps_meter").innerHTML = "";
+            }
             frameCount = 0;
             lastSampleTime = now;
         }
     }
 
     function draw(now) {
-        // trackFps(now);
+        trackFps(now);
 
         // Draw blue background
         ctx.save();
