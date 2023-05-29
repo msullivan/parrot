@@ -360,7 +360,7 @@
         render(ctx) {
             //console.log(this);
             ctx.save();
-            ctx.fillStyle = "green";
+            ctx.fillStyle = this.color;
             ctx.beginPath();
             ctx.moveTo(...toScreen(this.left));
             ctx.lineTo(...toScreen(this.top));
@@ -497,7 +497,7 @@
             sprite: sprite,
             layer: -1 + getRandom(-0.1, 0.1), // XXX too far forward?
             zscale: HILL_ZSCALE,
-            scale: 2,
+            scale: 1.5,
             hflip: randBool(),
         });
 
@@ -505,27 +505,28 @@
         game.noobs.push(n);
     }
 
-    // function makeHill() {
-    //     let left = new Vec2(game.nextHill, -GROUND_HEIGHT);
-    //     let langle = deg(getRandom(20, 45));
-    //     let lwidth = getRandom(0.4, 0.7)*canvas_width / 2;
-    //     let height = Math.tan(langle) * lwidth;
-    //     let rangle = getRandom(0.9, 1.1)*langle;
-    //     let rwidth = height/Math.tan(rangle);
+    function makeMtn() {
+        let left = new Vec2(game.nextMtn, -GROUND_HEIGHT);
+        let langle = deg(getRandom(55, 70));
+        let lwidth = getRandom(0.5, 0.8)*canvas_width / 2;
+        let height = Math.tan(langle) * lwidth;
+        let rangle = getRandom(0.9, 1.1)*langle;
+        let rwidth = height/Math.tan(rangle);
 
-    //     let top = left.add(new Vec2(lwidth, height));
-    //     let right = left.add(new Vec2(lwidth+rwidth, 0));
+        let top = left.add(new Vec2(lwidth, height));
+        let right = left.add(new Vec2(lwidth+rwidth, 0));
 
-    //     let n = new Hill({
-    //         left: left,
-    //         top: top,
-    //         right: right,
-    //         layer: -1 + getRandom(-0.1, 0.1), // XXX too far forward?
-    //         zscale: HILL_ZSCALE,
-    //     });
-    //     game.nextHill += getRandom(0.25, 0.5)*(lwidth+rwidth);
-    //     game.noobs.push(n);
-    // }
+        let n = new Hill({
+            left: left,
+            top: top,
+            right: right,
+            layer: -2 + getRandom(-0.1, 0.1), // XXX too far forward?
+            zscale: HILL_ZSCALE*HILL_ZSCALE,
+            color: "grey",
+        });
+        game.nextMtn += getRandom(0.25, 0.5)*(lwidth+rwidth);
+        game.noobs.push(n);
+    }
 
     //////////////////////////////////////////////
     function gameSetup() {
@@ -552,6 +553,10 @@
         game.nextHill = -canvas_width;
         while (game.nextHill < canvas_width*2) {
             makeHill();
+        }
+        game.nextMtn = -canvas_width;
+        while (game.nextMtn < canvas_width*2) {
+            makeMtn();
         }
     }
 
@@ -621,11 +626,13 @@
         let spawnPoint = game.birb.p.x + canvas_width;
         let spawnPoint2 = game.birb.p.x/2 + canvas_width;
         let spawnPointH = game.birb.p.x/HILL_ZSCALE + canvas_width;
+        let spawnPointM = game.birb.p.x/HILL_ZSCALE/HILL_ZSCALE + canvas_width;
 
         if (spawnPoint > game.nextGround) makeGround();
         if (spawnPoint > game.nextNote) makeNote();
         if (spawnPoint2 > game.nextCloud) makeCloud();
         if (spawnPointH > game.nextHill) makeHill();
+        if (spawnPointM > game.nextHill) makeHill();
 
 
         game.noobs = game.noobs.filter(function (noob) {
