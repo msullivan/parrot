@@ -4,7 +4,7 @@
     const GROUND_HEIGHT = 90;
     const GROUND_HEIGHT_DRAWN = 120;
     const DEFAULT_FPS = 60;
-    const COIN_SIZE = 20;
+    const NOTE_SIZE = 20;
     const BEAK_SIZE = 4;
     const HEAD_SIZE = 8;
     const SPEED = 3.5;
@@ -148,7 +148,7 @@
     var $ = function(s) { return document.getElementById(s); };
 
     // Lol.
-    var game = {birb: null, noobs: [], nextCoin: -1, nextCloud: 0, score: 0};
+    var game = {birb: null, noobs: [], nextNote: -1, nextCloud: 0, score: 0};
 
     const canvas = $("game");
     const ctx = canvas.getContext("2d");
@@ -367,7 +367,7 @@
     };
 
 
-    class Coin {
+    class Note {
         constructor(obj) {
             this.v = new Vec2(0, 0);
             // Is this bullshit?
@@ -469,23 +469,23 @@
         game.nextCloud += getRandom(0.1, 0.5)*canvas_width;
         // console.log("new cloud at ", c.p.x);
     }
-    function makeCoin() {
+    function makeNote() {
         let sprite = pickRandom(noteSprites);
-        let c = new Coin({
+        let c = new Note({
             p: new Vec2(
-                game.nextCoin,
+                game.nextNote,
                 getRandom(PARROT_FEET * 1.5,
-                          canvas_height-GROUND_HEIGHT-2*COIN_SIZE),
+                          canvas_height-GROUND_HEIGHT-2*NOTE_SIZE),
             ),
             sprite: sprite,
-            scale: sprite.height/(COIN_SIZE*2),
-            // size: COIN_SIZE,
+            scale: sprite.height/(NOTE_SIZE*2),
+            // size: NOTE_SIZE,
             layer: 0.5,
             zscale: 1,
         });
         game.noobs.push(c);
-        game.nextCoin += getRandom(0.2, 0.5)*canvas_width;
-        // console.log("new coin at ", c.p.x);
+        game.nextNote += getRandom(0.2, 0.5)*canvas_width;
+        // console.log("new note at ", c.p.x);
     }
 
     function makeGround() {
@@ -540,9 +540,9 @@
         });
         game.noobs.push(game.birb);
 
-        game.nextCoin = 500;
+        game.nextNote = 500;
         for (let i = 0; i < 5; i++) {
-            makeCoin();
+            makeNote();
         }
         game.nextCloud = -canvas_width;
         while (game.nextCloud < canvas_width*2) {
@@ -626,7 +626,7 @@
         let spawnPointH = game.birb.p.x/HILL_ZSCALE + canvas_width;
 
         if (spawnPoint > game.nextGround) makeGround();
-        if (spawnPoint > game.nextCoin) makeCoin();
+        if (spawnPoint > game.nextNote) makeNote();
         if (spawnPoint2 > game.nextCloud) makeCloud();
         if (spawnPointH > game.nextHill) makeHill();
 
