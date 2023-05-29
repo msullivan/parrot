@@ -486,14 +486,15 @@
 
         move() {
             let birb = game.birb;
+            let p = this.p.add(this.offs);
             if (
                 circRectHits(
                     birb.beakPos(), birb.beakSize(),
-                    this.p, this.width, this.height
+                    p, this.width, this.height
                 )
                 || circRectHits(
                     birb.headPos(), birb.headSize(),
-                    this.p, this.width, this.height
+                    p, this.width, this.height
                 )
             ) {
                 game.score++;
