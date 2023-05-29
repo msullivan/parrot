@@ -528,8 +528,8 @@
         }
     };
 
-    const HIT_FRAMES = 1;
-     class Cloud extends SimpleSprite {
+    const HIT_FRAMES = 3;
+    class Cloud extends SimpleSprite {
         constructor(obj) {
             super(obj);
             this.active = true;
