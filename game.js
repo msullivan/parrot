@@ -362,7 +362,10 @@
         move() {
             let birb = game.birb;
             if (birb.beakPos().sub(this.p).mag()
-                    <= this.size+birb.beakSize()) {
+                <= this.size+birb.beakSize()
+                || birb.headPos().sub(this.p).mag()
+                <= this.size+birb.headSize())
+            {
                 game.score++;
                 return true;
             }
