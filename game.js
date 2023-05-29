@@ -174,6 +174,10 @@
     for (let i = 1; i <= 3; i++) {
         noteSprites.push($("note" + i));
     }
+    let hillSprites = [];
+    for (let i = 1; i <= 5; i++) {
+        hillSprites.push($("hill" + i));
+    }
 
     /////////////////////////////////////////////
 
@@ -481,32 +485,47 @@
             scale: sprite.height/GROUND_HEIGHT_DRAWN,
             hflip: randBool(),
         });
-        game.nextGround += sprite.width/n.scale*0.9 + sprite.offset;
+        game.nextGround += n.width*0.9 + sprite.offset;
         game.noobs.push(n);
     }
 
     const HILL_ZSCALE = 4;
     function makeHill() {
-        let left = new Vec2(game.nextHill, -GROUND_HEIGHT);
-        let langle = deg(getRandom(20, 45));
-        let lwidth = getRandom(0.4, 0.7)*canvas_width / 2;
-        let height = Math.tan(langle) * lwidth;
-        let rangle = getRandom(0.9, 1.1)*langle;
-        let rwidth = height/Math.tan(rangle);
-
-        let top = left.add(new Vec2(lwidth, height));
-        let right = left.add(new Vec2(lwidth+rwidth, 0));
-
-        let n = new Hill({
-            left: left,
-            top: top,
-            right: right,
+        let sprite = pickRandom(hillSprites);
+        let n = new SimpleSprite({
+            p: new Vec2(game.nextHill, -GROUND_HEIGHT),
+            sprite: sprite,
             layer: -1 + getRandom(-0.1, 0.1), // XXX too far forward?
             zscale: HILL_ZSCALE,
+            scale: 2,
+            hflip: randBool(),
         });
-        game.nextHill += getRandom(0.25, 0.5)*(lwidth+rwidth);
+
+        game.nextHill += getRandom(0.25, 0.5)*n.width;
         game.noobs.push(n);
     }
+
+    // function makeHill() {
+    //     let left = new Vec2(game.nextHill, -GROUND_HEIGHT);
+    //     let langle = deg(getRandom(20, 45));
+    //     let lwidth = getRandom(0.4, 0.7)*canvas_width / 2;
+    //     let height = Math.tan(langle) * lwidth;
+    //     let rangle = getRandom(0.9, 1.1)*langle;
+    //     let rwidth = height/Math.tan(rangle);
+
+    //     let top = left.add(new Vec2(lwidth, height));
+    //     let right = left.add(new Vec2(lwidth+rwidth, 0));
+
+    //     let n = new Hill({
+    //         left: left,
+    //         top: top,
+    //         right: right,
+    //         layer: -1 + getRandom(-0.1, 0.1), // XXX too far forward?
+    //         zscale: HILL_ZSCALE,
+    //     });
+    //     game.nextHill += getRandom(0.25, 0.5)*(lwidth+rwidth);
+    //     game.noobs.push(n);
+    // }
 
     //////////////////////////////////////////////
     function gameSetup() {
