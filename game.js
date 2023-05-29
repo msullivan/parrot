@@ -137,6 +137,25 @@
         ctx.restore();
     }
 
+    function drawText(string, font, pos) {
+        // NB pos is pure screen coordinates
+        let tgtHeight = 48;
+        let refHeight = font[0].height;
+        let scale = refHeight/tgtHeight;
+
+        for (let i = 0; i < string.length; i++) {
+            // console.log(pos);
+            let c = string.charAt(i);
+            let idx = c == "-" ? 10 : parseInt(c);
+            let glyph = font[idx];
+            // console.log(i, c, font, idx, glyph);
+            let h = glyph.height/scale;
+            ctx.drawImage(glyph, pos.x, pos.y - h, glyph.width/scale, h);
+            pos = pos.add(new Vec2(glyph.width/scale + 3, 0));
+
+        }
+    }
+
     function circRectIntersect(circPos, rad, rectPos, width, height) {
         let closest = new Vec2(
             clamp(circPos.x, rectPos.x, rectPos.x+width),
@@ -207,7 +226,7 @@
 
     // Lol.
     var game = {
-        birb: null, noobs: [], score: 0, penalized: false, started: false
+        birb: null, noobs: [], score: -0, penalized: false, started: false
     };
 
     const canvas = $("game");
@@ -241,6 +260,14 @@
     let mtnSprites = [];
     for (let i = 1; i <= 3; i++) {
         mtnSprites.push($("mtn" + i));
+    }
+    let redFont = [];
+    for (let i = 0; i <= 10; i++) {
+        redFont.push($("font" + i));
+    }
+    let orangeFont = [];
+    for (let i = 11; i <= 21; i++) {
+        orangeFont.push($("font" + i));
     }
     let introSprite = $("intro");
 
@@ -801,11 +828,8 @@
         }
 
         // Draw score
-        ctx.save();
-        ctx.font = "48px sans";
-        ctx.fillStyle = game.penalized ? "#8b0000" : "black";
-        ctx.fillText(game.score.toString(), 20, 50);
-        ctx.restore();
+        let font = game.penalized ? redFont : orangeFont;
+        drawText(game.score.toString(), font, new Vec2(20, 70));
     }
 
     var touched = false;
