@@ -162,6 +162,10 @@
     for (let i = 1; i <= 5; i++) {
         cloudSprites.push($("cloud" + i));
     }
+    let noteSprites = [];
+    for (let i = 1; i <= 3; i++) {
+        noteSprites.push($("note" + i));
+    }
 
     /////////////////////////////////////////////
 
