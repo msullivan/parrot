@@ -106,6 +106,7 @@
     const PARROT_FEET = (PARROT_FEET_RAW + PARROT_CENTER_RAW.y) / PARROT_SCALE;
 
     function deg(f) { return f * Math.PI / 180; }
+    function clamp(val, min, max) { return Math.min(Math.max(min, val), max); }
 
     function xToScreen(x) { return x; }
     function yToScreen(y) { return -y; }
@@ -133,6 +134,13 @@
         ctx.restore();
     }
 
+    function circRectIntersect(circPos, rad, rectPos, width, height) {
+        let closest = new Vec2(
+            clamp(circPos.x, rectPos.x, rectPos.x+width),
+            clamp(circPos.y, rectPos.y, rectPos.y+width),
+        );
+        return (closest.sub(circPos)).mag2() < rad*rad;
+    }
 
     /////////////// Globals?
 
@@ -279,7 +287,6 @@
         }
 
         renderLines(ctx) {
-            //console.log(this);
             ctx.save();
             ctx.strokeStyle = "red";
             ctx.lineWidth = 2;
@@ -365,23 +372,51 @@
             this.v = new Vec2(0, 0);
             // Is this bullshit?
             for (let elem in obj) this[elem] = obj[elem];
+            this.offs = new Vec2(0, this.sprite.height/this.scale);
+
+            this.width = this.sprite.width/this.scale;
+            this.height = this.sprite.height/this.scale;
         }
 
         move() {
             let birb = game.birb;
-            if (birb.beakPos().sub(this.p).mag()
-                <= this.size+birb.beakSize()
-                || birb.headPos().sub(this.p).mag()
-                <= this.size+birb.headSize())
-            {
+            if (
+                circRectIntersect(
+                    birb.beakPos(), birb.beakSize(),
+                    this.p, this.width, this.height
+                )
+                || circRectIntersect(
+                    birb.headPos(), birb.headSize(),
+                    this.p, this.width, this.height
+                )
+            ) {
                 game.score++;
                 return true;
             }
         }
 
         render(ctx) {
-            dot(ctx, "#FFC800", this.p, this.size);
+            let sprite = this.sprite;
+
+            ctx.save();
+            ctx.translate(...toScreen(this.p));
+            ctx.drawImage(
+                sprite, ...toScreen(this.offs), this.width, this.height);
+            // dot(ctx, "orange", new Vec2(0, 0), 4);
+
+            if (conf.DEBUG_DOTS) {
+                ctx.strokeStyle = "blue";
+                ctx.beginPath();
+                ctx.rect(...toScreen(this.offs), this.width, this.height);
+                ctx.stroke();
+            }
+
+            ctx.restore();
+
         }
+        // render(ctx) {
+        //     dot(ctx, "#FFC800", this.p, this.size);
+        // }
     };
 
     class Bg {
@@ -393,9 +428,7 @@
                     this.sprite.height/this.scale/2,
                 );
             } else {
-                this.offs = new Vec2(
-                    0, this.sprite.height/this.scale
-                );
+                this.offs = new Vec2(0, this.sprite.height/this.scale);
             }
         }
 
@@ -437,13 +470,16 @@
         // console.log("new cloud at ", c.p.x);
     }
     function makeCoin() {
+        let sprite = pickRandom(noteSprites);
         let c = new Coin({
             p: new Vec2(
                 game.nextCoin,
                 getRandom(PARROT_FEET * 1.5,
-                          canvas_height-GROUND_HEIGHT-COIN_SIZE),
+                          canvas_height-GROUND_HEIGHT-2*COIN_SIZE),
             ),
-            size: COIN_SIZE,
+            sprite: sprite,
+            scale: sprite.height/(COIN_SIZE*2),
+            // size: COIN_SIZE,
             layer: 0.5,
             zscale: 1,
         });
