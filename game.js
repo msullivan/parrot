@@ -904,7 +904,6 @@
         const flyctx = fly.getContext("2d");
         setupDpr(fly, flyctx);
 
-        flyctx.rotate(deg(1));
         flyctx.drawImage(flyImg, 0, 0, fwidth, FHEIGHT);
 
         const ON = ["touchstart", "mousedown"];
