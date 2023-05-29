@@ -4,7 +4,7 @@
     const GROUND_HEIGHT = 90;
     const GROUND_HEIGHT_DRAWN = 120;
     const DEFAULT_FPS = 60;
-    const NOTE_SIZE = 20;
+    const NOTE_SIZE = 50;
     const BEAK_SIZE = 4;
     const HEAD_SIZE = 8;
     const SPEED = 3.5;
@@ -501,11 +501,10 @@
             p: new Vec2(
                 game.nextNote,
                 getRandom(PARROT_FEET * 1.5,
-                          canvas_height-GROUND_HEIGHT-2*NOTE_SIZE),
+                          canvas_height-GROUND_HEIGHT-NOTE_SIZE),
             ),
             sprite: sprite,
-            scale: sprite.height/(NOTE_SIZE*2),
-            // size: NOTE_SIZE,
+            scale: sprite.height/NOTE_SIZE,
             layer: 0.5,
             zscale: 1,
         });
