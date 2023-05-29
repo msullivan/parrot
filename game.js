@@ -175,7 +175,7 @@
         noteSprites.push($("note" + i));
     }
     let hillSprites = [];
-    for (let i = 1; i <= 5; i++) {
+    for (let i = 1; i <= 4; i++) {
         hillSprites.push($("hill" + i));
     }
     let mtnSprites = [];
@@ -536,32 +536,35 @@
     const HILL_ZSCALE = 4;
     function makeHill() {
         let sprite = pickRandom(hillSprites);
+        let height = getRandom(0.20, 0.375);
+        let scale = hillSprites[0].height/(height*canvas_height);
         let n = new SimpleSprite({
             p: new Vec2(game.nextHill, -GROUND_HEIGHT),
             sprite: sprite,
             layer: -1 + getRandom(-0.1, 0.1), // XXX too far forward?
             zscale: HILL_ZSCALE,
-            scale: 1.5,
+            scale: scale,
             hflip: randBool(),
         });
 
-        game.nextHill += getRandom(0.25, 0.5)*n.width;
+        game.nextHill += getRandom(0.35, 0.7)*n.width;
         game.noobs.push(n);
     }
 
     const MTN_ZSCALE = HILL_ZSCALE*HILL_ZSCALE;
     function makeMtn() {
         let sprite = pickRandom(mtnSprites);
-        console.log(mtnSprites);
+        let height = 0.775 * getRandom(0.9, 1.1);
+        let scale = mtnSprites[2].height/(height*canvas_height);
         let n = new SimpleSprite({
             p: new Vec2(game.nextMtn, -GROUND_HEIGHT),
             sprite: sprite,
             layer: -2 + getRandom(-0.1, 0.1), // XXX too far forward?
             zscale: MTN_ZSCALE,
-            scale: 2.25,
-            globalAlpha: 0.58,
+            scale: scale,
+            globalAlpha: 0.5,
         });
-        game.nextMtn += getRandom(0.25, 0.5)*n.width;
+        game.nextMtn += getRandom(0.25, 0.65)*n.width;
         game.noobs.push(n);
     }
 
@@ -702,7 +705,8 @@
         });
         let n = game.noobs.length;
         game.noobs = game.noobs.filter(function (noob) {
-            return noob.p.x > game.birb.p.x/noob.zscale - canvas_width;
+            let width = noob.width ?? 0;
+            return noob.p.x + width > game.birb.p.x/noob.zscale - canvas_width;
         });
     }
 
