@@ -897,14 +897,13 @@
     function setupButtons() {
         let fly = $("fly_button");
         let flyImg = $("fly");
-        const FHEIGHT = 100;
-        let fscale = (flyImg.height/100);
+        let fscale = 2;
         let fwidth = flyImg.width / fscale;
         fly.width = fwidth;
         const flyctx = fly.getContext("2d");
         setupDpr(fly, flyctx);
 
-        flyctx.drawImage(flyImg, 0, 0, fwidth, FHEIGHT);
+        flyctx.drawImage(flyImg, 0, 0, fwidth, flyImg.height/fscale);
 
         const ON = ["touchstart", "mousedown"];
         const OFF = ["touchend", "touchcancel", "mouseup", "mouseout"];
