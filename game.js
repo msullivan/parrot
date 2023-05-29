@@ -432,11 +432,12 @@
             if (this.center) {
                 this.offs = new Vec2(
                     -this.width/2,
-                    this.height/2,
+                    -this.height/2,
                 );
             } else {
-                this.offs = new Vec2(0, this.height);
+                this.offs = new Vec2(0, 0);
             }
+            this.drawOffs = this.offs.add(new Vec2(0, this.height));
         }
 
         move() {}
@@ -458,13 +459,14 @@
                 ctx.globalAlpha = this.globalAlpha;
             }
             ctx.drawImage(
-                this.sprite, ...toScreen(this.offs), this.width, this.height);
+                this.sprite, ...toScreen(this.drawOffs),
+                this.width, this.height);
 
             if (this.active && conf.DEBUG_DOTS) {
                 dot(ctx, "red", new Vec2(0, 0));
                 ctx.strokeStyle = "blue";
                 ctx.beginPath();
-                ctx.rect(...toScreen(this.offs), this.width, this.height);
+                ctx.rect(...toScreen(this.drawOffs), this.width, this.height);
                 ctx.stroke();
             }
 
@@ -505,10 +507,11 @@
             this.hit = 0;
 
             let scale = this.scale;
+            let offs = this.offs;//d.add(new Vec2(0, -this.height));
             this.boxes = this.boxes.map(function(box) {
                 // let v = offs.add(box.corner.scale(1/scale));
                 return {
-                    corner: box.corner.scale(1/scale),
+                    corner: box.corner.scale(1/scale).add(offs),
                     width: box.width / scale,
                     height: box.height / scale,
                 };
@@ -521,7 +524,7 @@
             let size = birb.headSize();
             if (!circRectHits(
                 birbpos, size,
-                this.p, this.width, this.height
+                this.p.add(this.offs), this.width, this.height
             )) {
                 return false;
             }
@@ -575,7 +578,7 @@
             scale: 5,
             sprite: pickRandom(cloudSprites),
             layer: 0,
-            // center: true,
+            center: true,
             zscale: CLOUD_ZSCALE,
             // hflip: randBool(),
             hflip: false,
