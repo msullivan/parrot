@@ -138,7 +138,7 @@
     function circRectIntersect(circPos, rad, rectPos, width, height) {
         let closest = new Vec2(
             clamp(circPos.x, rectPos.x, rectPos.x+width),
-            clamp(circPos.y, rectPos.y, rectPos.y+width),
+            clamp(circPos.y, rectPos.y, rectPos.y+height),
         );
         return (closest.sub(circPos)).mag2() <= rad*rad;
     }
