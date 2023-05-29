@@ -13,6 +13,7 @@
         // TRIANGLE_BIRD: true,
         // DEBUG_DOTS: true,
         // FPS: 30,
+        // DEBUG_MOVEMENT: true,
     };
 
     let configHandler = {
@@ -295,7 +296,9 @@
             }
 
             // XXX
-            this.p = this.p.add(this.v);
+            if (!conf.DEBUG_MOVEMENT) {
+                this.p = this.p.add(this.v);
+            }
 
             // XXX: Debug! Sideways velocity!
             var side = 0;
@@ -328,11 +331,13 @@
             const hi = 50;
             this.wing_angle = deg(lo + (hi-lo)*(cnt/N));
 
-            // if (kd.A.isDown() || kd.LEFT.isDown()) this.p.x -= 2;
-            // if (kd.D.isDown() || kd.RIGHT.isDown()) this.p.x += 2;
-            // if (kd.S.isDown()) this.p.y -= 2;
-            // if (kd.W.isDown()) this.p.y += 2;
-            // this.v = new Vec2(1, 0);
+            if (conf.DEBUG_MOVEMENT) {
+                if (kd.A.isDown()) this.p.x -= 2;
+                if (kd.D.isDown()) this.p.x += 2;
+                if (kd.S.isDown()) this.p.y -= 2;
+                if (kd.W.isDown()) this.p.y += 2;
+                this.v = new Vec2(1, 0);
+            }
         }
 
         flightAngle() {
