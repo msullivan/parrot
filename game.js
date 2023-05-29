@@ -10,7 +10,7 @@
     const SPEED = 3.5;
 
     const CONFIG = {
-        // LINE_PARROT: true,
+        // TRIANGLE_BIRD: true,
         // DEBUG_DOTS: true,
         // FPS: 30,
     };
@@ -191,12 +191,16 @@
         getFrame() {
             return Math.floor(this.steps / FRAMES_PER) % AFRAMES;
         }
+        headSize() {
+            return conf.TRIANGLE_BIRD ? 0 : HEAD_SIZE;
+        }
+        beakSize() { return BEAK_SIZE; }
 
         move() {
             if (!this.moving) return;
 
             let oldCrashed = this.crashed;
-            const feet = conf.LINE_PARROT ? 0 : PARROT_FEET;
+            const feet = conf.TRIANGLE_BIRD ? 0 : PARROT_FEET;
             this.crashed = this.p.y <= feet;
             if (this.crashed) {
                 this.steps = CRASH_AFRAME * FRAMES_PER;
@@ -214,7 +218,6 @@
             if (kd.A.isDown() || kd.LEFT.isDown()) side -= 0.2;
             if (kd.D.isDown() || kd.RIGHT.isDown()) side += 0.2;
             this.v = this.v.add(directions.right.scale(side));
-            // console.log(this.v.x + ", " + this.v.y);
 
             if (this.flapping) {
                 let amt = G;
@@ -243,12 +246,13 @@
         }
 
         flightAngle() {
-            return this.crashed ? 0 : -this.v.angle() + deg(27);
+            let offset = conf.TRIANGLE_BIRD ? 0 : deg(27);
+            return this.crashed ? 0 : -this.v.angle() + offset;
         }
 
         rawBeakOffset() {
-            if (conf.LINE_PARROT) {
-                return new Vec2(0, 0);
+            if (conf.TRIANGLE_BIRD) {
+                return new Vec2(20, 0);
             } else {
                 return PARROT_BEAK[this.getFrame()].sub(PARROT_CENTER);
             }
@@ -258,14 +262,19 @@
         }
         beakPos() { return this.p.add(this.beakOffset()); }
         headPos() {
-            return this.rawBeakOffset().sub(new Vec2(10, -2))
-                .rotate(-this.flightAngle()).add(this.p);
+            if (conf.TRIANGLE_BIRD) {
+                return this.beakPos();
+            } else {
+                return this.rawBeakOffset().sub(new Vec2(10, -2))
+                    .rotate(-this.flightAngle()).add(this.p);
+            }
         }
 
         renderLines(ctx) {
             //console.log(this);
             ctx.save();
-            ctx.strokeStyle = "green";
+            ctx.strokeStyle = "red";
+            ctx.lineWidth = 2;
             ctx.translate(...toScreen(this.p));
             ctx.rotate(this.crashed ? 0 : -this.v.angle());
             const len = 30;
@@ -274,6 +283,10 @@
             ctx.moveTo(-Math.cos(wangle)*len, -Math.sin(wangle)*len);
             ctx.lineTo(0, 0);
             ctx.lineTo(-Math.cos(wangle)*len, Math.sin(wangle)*len);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.lineTo(0, 0);
+            ctx.lineTo(...toScreen(this.rawBeakOffset()));
             ctx.stroke();
             ctx.restore();
         }
@@ -296,12 +309,12 @@
         }
 
         render(ctx) {
-            conf.LINE_PARROT ? this.renderLines(ctx) : this.renderSprite(ctx);
+            conf.TRIANGLE_BIRD ? this.renderLines(ctx) : this.renderSprite(ctx);
 
             if (conf.DEBUG_DOTS) {
-                dot(ctx, "green", this.p);
-                dot(ctx, "blue", this.beakPos(), this.beakSize);
-                dot(ctx, "blue", this.headPos(), this.headSize);
+                dot(ctx, "red", this.p);
+                dot(ctx, "blue", this.beakPos(), this.beakSize());
+                dot(ctx, "blue", this.headPos(), this.headSize());
 
                 // ctx.save();
                 // ctx.strokeStyle = "orange";
@@ -348,7 +361,8 @@
 
         move() {
             let birb = game.birb;
-            if (birb.beakPos().sub(this.p).mag() <= this.size+birb.beakSize) {
+            if (birb.beakPos().sub(this.p).mag()
+                    <= this.size+birb.beakSize()) {
                 game.score++;
                 return true;
             }
@@ -470,8 +484,6 @@
         game.birb = new Bird({
             p: new Vec2(0, PARROT_FEET),
             crashed: true,
-            beakSize: BEAK_SIZE,
-            headSize: HEAD_SIZE,
             layer: 1,
             zscale: 1,
         });
