@@ -116,6 +116,9 @@
     function getRandom(min, max) {
         return Math.random() * (max - min) + min;
     }
+    function randBool() {
+        return Math.random() < 0.5;
+    }
     function pickRandom(opts) {
         return opts[Math.floor(getRandom(0, opts.length))];
     }
@@ -145,10 +148,11 @@
     const canvas_height = canvas.height;
 
     let groundSprites = [];
-    for (let i = 1; i <= 3; i++) {
-        groundSprites.push($("plant" + i));
+    let groundOffsets = [0, -20, 0];
+    for (let i = 0; i < 3; i++) {
+        groundSprites.push($("plant" + (i+1)));
+        groundSprites[i].offset = groundOffsets[i];
     }
-    let bg = groundSprites[2];
 
     let birdSprites = [];
     for (let i = 1; i <= 9; i++) {
@@ -395,14 +399,16 @@
 
         render(ctx) {
             let sprite = this.sprite;
+            let width = sprite.width/this.scale;
+            let height = sprite.height/this.scale;
 
             ctx.save();
             ctx.translate(...toScreen(this.p));
-            ctx.drawImage(
-                sprite,
-                ...toScreen(this.offs),
-                sprite.width/this.scale, sprite.height/this.scale,
-            );
+            if (this.hflip) {
+                ctx.translate(width, 0);
+                ctx.scale(-1, 1);
+            }
+            ctx.drawImage(sprite, ...toScreen(this.offs), width, height);
             // dot(ctx, "orange", new Vec2(0, 0), 4);
 
             ctx.restore();
@@ -420,6 +426,7 @@
             layer: 0,
             center: true,
             zscale: 2,
+            hflip: randBool(),
         });
         game.noobs.push(c);
         game.nextCloud += getRandom(0.1, 0.5)*canvas_width;
@@ -454,8 +461,9 @@
             layer: 3 + getRandom(-0.1, 0.1),
             zscale: 1,
             scale: sprite.height/GROUND_HEIGHT_DRAWN,
+            hflip: randBool(),
         });
-        game.nextGround += sprite.width/n.scale*0.9;
+        game.nextGround += sprite.width/n.scale*0.9 + sprite.offset;
         game.noobs.push(n);
     }
 
