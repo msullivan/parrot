@@ -815,7 +815,9 @@
     }
 
     function tick(time) {
-        game.birb.setFlapping(kd.SPACE.isDown() || touched);
+        let flapping = kd.SPACE.isDown() || touched;
+        game.birb.setFlapping(flapping);
+        if (flapping) game.started = true;
 
         let spawnPoint = game.birb.p.x + canvas_width;
         let spawnPointC = game.birb.p.x/CLOUD_ZSCALE + canvas_width;
@@ -925,10 +927,6 @@
 
         kd.run(function () { kd.tick(); });
         var stopRunning;
-        kd.SPACE.press(function() {
-            // audio.pause();
-            game.started = true;
-        });
         kd.Q.press(function() {
             // audio.pause();
             stopRunning();
