@@ -608,7 +608,6 @@
                 && circRectHits(tgt.p, tgt.nocollide, c.p, c.width, c.height))
             {
                 game.nextCloud += 0.1*canvas_width;
-                console.log("REJECT");
                 return;
             }
         }
@@ -645,7 +644,6 @@
                                 tgt.width, tgt.height))
             {
                 game.nextNote += 0.1*canvas_width;
-                console.log("REJECT NOTE");
                 return;
             }
         }
