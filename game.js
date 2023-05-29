@@ -1,8 +1,8 @@
 (function() {
     //////////// Content?
     //////////// Constants and shit
-    const GROUND_HEIGHT = 60;
-    const GROUND_HEIGHT_DRAWN = 80;
+    const GROUND_HEIGHT = 90;
+    const GROUND_HEIGHT_DRAWN = 120;
     const DEFAULT_FPS = 60;
     const COIN_SIZE = 20;
     const BEAK_SIZE = 4;
