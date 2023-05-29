@@ -434,6 +434,7 @@
         }
     };
 
+    const CLOUD_ZSCALE = 2;
     function makeCloud() {
         let c = new SimpleSprite({
             p: new Vec2(
@@ -444,7 +445,7 @@
             sprite: pickRandom(cloudSprites),
             layer: 0,
             center: true,
-            zscale: 2,
+            zscale: CLOUD_ZSCALE,
             hflip: randBool(),
         });
         game.noobs.push(c);
@@ -624,16 +625,15 @@
         game.birb.setFlapping(kd.SPACE.isDown() || touched);
 
         let spawnPoint = game.birb.p.x + canvas_width;
-        let spawnPoint2 = game.birb.p.x/2 + canvas_width;
+        let spawnPointC = game.birb.p.x/CLOUD_ZSCALE + canvas_width;
         let spawnPointH = game.birb.p.x/HILL_ZSCALE + canvas_width;
         let spawnPointM = game.birb.p.x/HILL_ZSCALE/HILL_ZSCALE + canvas_width;
 
         if (spawnPoint > game.nextGround) makeGround();
         if (spawnPoint > game.nextNote) makeNote();
-        if (spawnPoint2 > game.nextCloud) makeCloud();
+        if (spawnPointC > game.nextCloud) makeCloud();
         if (spawnPointH > game.nextHill) makeHill();
-        if (spawnPointM > game.nextHill) makeHill();
-
+        if (spawnPointM > game.nextMtn) makeMtn();
 
         game.noobs = game.noobs.filter(function (noob) {
             return noob.move() !== true;
