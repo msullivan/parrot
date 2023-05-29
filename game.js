@@ -140,7 +140,71 @@
             clamp(circPos.x, rectPos.x, rectPos.x+width),
             clamp(circPos.y, rectPos.y, rectPos.y+height),
         );
+        // console.log(circPos);
+        // console.log(rectPos);
+        // console.log(closest);
+        // console.log((closest.sub(circPos)).mag());
         return (closest.sub(circPos)).mag2() <= rad*rad;
+    }
+    function rectContains(pos, rectPos, width, height) {
+        return (
+            rectPos.x <= pos.x
+                && pos.x <= rectPos.x + width
+                && rectPos.y <= pos.y
+                && pos.y <= rectPos.y + height
+        );
+    }
+    function circRectHits(circPos, rad, rectPos, width, height) {
+        return rectContains(circPos, rectPos, width, height)
+            || circRectIntersect(circPos, rad, rectPos, width, height);
+    }
+    //
+    function getImageData(img) {
+        var canvas = document.createElement('canvas');
+        canvas.height = img.height;
+        canvas.width = img.width;
+        let ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        return ctx.getImageData(0, 0, canvas.width, canvas.height);
+    }
+
+    function processBoundingBoxes(img, slices) {
+        var data = getImageData(img).data;
+        let width = img.width;
+        function px(x, y) { return data[(y*width+x)*4 + 3]; }
+
+        console.log(px(0, 0));
+        console.log(px(100, 100));
+        console.log(img.width + "/" + img.height);
+        console.log(px(600, 600));
+
+        let sliceSize = (img.width/(slices-1)) | 0;
+        let boxes = [];
+        for (let i = 0; i < slices; i++) {
+            let start = sliceSize*i;
+            let end = Math.min(start+sliceSize, img.width-1);
+            let top = img.height-1;
+            let bot = 0;
+            for (let y = 0; y < img.height; y++) {
+                for (let x = start; x <= end; x++) {
+                    // if (px(x, y) === undefined) {
+                    //     console.log(x + "/" + y + ": " + px(x, y));
+                    // }
+                    if (px(x, y) != 0) {
+                        // console.log(x + "/" + y + ": " + px(x, y));
+                        top = Math.min(top, y);
+                        bot = Math.max(bot, y);
+                    }
+                }
+            }
+            let box = {corner: new Vec2(start, img.height-bot),
+                       width: end-start, height: bot-top+1};
+            console.log("slice " + i + " has " + JSON.stringify(box) + "/"
+                        + [bot, top]);
+            boxes.push(box);
+        }
+
+        return boxes;
     }
 
     /////////////// Globals?
@@ -170,6 +234,8 @@
     let cloudSprites = [];
     for (let i = 1; i <= 5; i++) {
         cloudSprites.push($("cloud" + i));
+        cloudSprites[i-1].boxes = processBoundingBoxes(
+            cloudSprites[i-1], slices=25);
     }
     let noteSprites = [];
     for (let i = 1; i <= 3; i++) {
@@ -232,13 +298,14 @@
                 this.p.y = feet;
                 this.v = new Vec2(0, 0);
                 if (!oldCrashed) {
-                    game.score -= 3;
-                    game.penalized = true;
+                    // game.score -= 3;
+                    // game.penalized = true;
                 }
             } else if (oldCrashed) {
                 this.v.x = conf.SPEED; // XXX
             }
 
+            // XXX
             this.p = this.p.add(this.v);
 
             // XXX: Debug! Sideways velocity!
@@ -271,6 +338,12 @@
             const lo = 20;
             const hi = 50;
             this.wing_angle = deg(lo + (hi-lo)*(cnt/N));
+
+            // if (kd.A.isDown() || kd.LEFT.isDown()) this.p.x -= 2;
+            // if (kd.D.isDown() || kd.RIGHT.isDown()) this.p.x += 2;
+            // if (kd.S.isDown()) this.p.y -= 2;
+            // if (kd.W.isDown()) this.p.y += 2;
+            // this.v = new Vec2(1, 0);
         }
 
         flightAngle() {
@@ -396,10 +469,16 @@
         }
 
         move() {}
+        renderDebug() {}
 
         render(ctx) {
             ctx.save();
             ctx.translate(...toScreen(this.p));
+
+            if (this.active && conf.DEBUG_DOTS) {
+                this.renderDebug();
+            }
+
             if (this.hflip) {
                 ctx.translate(this.width, 0);
                 ctx.scale(-1, 1);
@@ -412,6 +491,8 @@
                 this.sprite, ...toScreen(this.offs), this.width, this.height);
 
             if (this.active && conf.DEBUG_DOTS) {
+                // this.renderDebug();
+                dot(ctx, "red", new Vec2(0, 0));
                 ctx.strokeStyle = "blue";
                 ctx.beginPath();
                 ctx.rect(...toScreen(this.offs), this.width, this.height);
@@ -431,11 +512,11 @@
         move() {
             let birb = game.birb;
             if (
-                circRectIntersect(
+                circRectHits(
                     birb.beakPos(), birb.beakSize(),
                     this.p, this.width, this.height
                 )
-                || circRectIntersect(
+                || circRectHits(
                     birb.headPos(), birb.headSize(),
                     this.p, this.width, this.height
                 )
@@ -447,29 +528,83 @@
         }
     };
 
-    const HIT_FRAMES = 3;
-    class Cloud extends SimpleSprite {
+    const HIT_FRAMES = 1;
+     class Cloud extends SimpleSprite {
         constructor(obj) {
             super(obj);
             this.active = true;
             this.hit = 0;
+
+            let scale = this.scale;
+            this.boxes = this.boxes.map(function(box) {
+                // let v = offs.add(box.corner.scale(1/scale));
+                return {
+                    corner: box.corner.scale(1/scale),
+                    width: box.width / scale,
+                    height: box.height / scale,
+                };
+            });
+
         }
 
+        hits(birb) {
+            let birbpos = birb.headPos();
+            let size = birb.headSize();
+            if (!circRectHits(
+                birbpos, size,
+                this.p, this.width, this.height
+            )) {
+                return false;
+            }
+            // console.log("checking!");
+            for (let i = 0; i < this.boxes.length; i++) {
+                let box = this.boxes[i];
+
+                let corner = this.p.add(box.corner);
+                // if (corner.x <= birbpos.x && birbpos.x <= corner.x+box.width) {
+                //     console.log(
+                //         i,
+                //         birbpos,
+                //         corner, box.width, box.height);
+                //     console.log(this.p, box.corner);
+                // }
+                if (
+                    circRectHits(
+                        birbpos, size,
+                        corner, box.width, box.height)
+                ) {
+                    // console.log("hit " + i);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+
         move() {
-            let birb = game.birb;
             // XXX: multiple frame hits?
-            if (
-                circRectIntersect(
-                    birb.p, 0.01,
-                    this.p, this.width, this.height
-                )
-            ) {
+            if (this.hits(game.birb)) {
                 this.hit++;
                 if (this.hit == HIT_FRAMES) {
                     game.score--;
                     game.penalized = true;
                 }
             }
+        }
+
+        renderDebug() {
+            ctx.strokeStyle = "black";
+            ctx.beginPath();
+            let scale = this.scale;
+            let offs = this.offs;
+            this.boxes.forEach(function(box) {
+                // let v = offs.add(box.corner.scale(1/scale));
+                // v.y *= -1;
+                // console.log(JSON.stringify(box));
+                let corner = box.corner.add(new Vec2(0, box.height));
+                ctx.rect(...toScreen(corner), box.width, box.height);
+            });
+            ctx.stroke();
         }
     };
 
@@ -481,16 +616,21 @@
                 getRandom(0.2, 0.85)*canvas_height,
             ),
             scale: 5,
+            // sprite: cloudSprites[4],
             sprite: pickRandom(cloudSprites),
             layer: 0,
-            center: true,
+            // center: true,
             zscale: CLOUD_ZSCALE,
-            hflip: randBool(),
+            // hflip: randBool(),
+            // hflip: true,
+            hflip: false,
         };
         let c = new SimpleSprite(params);
         game.noobs.push(c);
         params.globalAlpha = 0.5;
         params.layer = 1.2;
+        params.boxes = params.sprite.boxes;
+        // console.log(params.boxes);
         game.noobs.push(new Cloud(params));
 
         game.nextCloud += getRandom(0.1, 0.5)*canvas_width;
