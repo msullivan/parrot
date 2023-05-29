@@ -910,6 +910,11 @@
     }
 
     function init() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('debug')) {
+            $('debug_config').hidden = '';
+        }
+
         $("fps").value = DEFAULT_FPS;
         $("speed").value = SPEED;
         cloudSprites.forEach(function(sprite) {
