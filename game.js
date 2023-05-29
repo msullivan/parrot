@@ -536,7 +536,7 @@
     const HILL_ZSCALE = 4;
     function makeHill() {
         let sprite = pickRandom(hillSprites);
-        let height = getRandom(0.20, 0.375);
+        let height = getRandom(0.23, 0.375);
         let scale = hillSprites[0].height/(height*canvas_height);
         let n = new SimpleSprite({
             p: new Vec2(game.nextHill, -GROUND_HEIGHT),
