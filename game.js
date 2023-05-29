@@ -366,16 +366,50 @@
         }
     };
 
-
-    class Note {
+    class SimpleSprite {
         constructor(obj) {
-            this.v = new Vec2(0, 0);
-            // Is this bullshit?
             for (let elem in obj) this[elem] = obj[elem];
-            this.offs = new Vec2(0, this.sprite.height/this.scale);
 
             this.width = this.sprite.width/this.scale;
             this.height = this.sprite.height/this.scale;
+
+            if (this.center) {
+                this.offs = new Vec2(
+                    -this.width/2,
+                    this.height/2,
+                );
+            } else {
+                this.offs = new Vec2(0, this.height);
+            }
+        }
+
+        move() {}
+
+        render(ctx) {
+            ctx.save();
+            ctx.translate(...toScreen(this.p));
+            if (this.hflip) {
+                ctx.translate(this.width, 0);
+                ctx.scale(-1, 1);
+            }
+            ctx.drawImage(
+                this.sprite, ...toScreen(this.offs), this.width, this.height);
+
+            if (this.active && conf.DEBUG_DOTS) {
+                ctx.strokeStyle = "blue";
+                ctx.beginPath();
+                ctx.rect(...toScreen(this.offs), this.width, this.height);
+                ctx.stroke();
+            }
+
+            ctx.restore();
+        }
+    };
+
+    class Note extends SimpleSprite {
+        constructor(obj) {
+            super(obj);
+            this.active = true;
         }
 
         move() {
@@ -394,66 +428,10 @@
                 return true;
             }
         }
-
-        render(ctx) {
-            let sprite = this.sprite;
-
-            ctx.save();
-            ctx.translate(...toScreen(this.p));
-            ctx.drawImage(
-                sprite, ...toScreen(this.offs), this.width, this.height);
-            // dot(ctx, "orange", new Vec2(0, 0), 4);
-
-            if (conf.DEBUG_DOTS) {
-                ctx.strokeStyle = "blue";
-                ctx.beginPath();
-                ctx.rect(...toScreen(this.offs), this.width, this.height);
-                ctx.stroke();
-            }
-
-            ctx.restore();
-
-        }
-        // render(ctx) {
-        //     dot(ctx, "#FFC800", this.p, this.size);
-        // }
-    };
-
-    class Bg {
-        constructor(obj) {
-            for (let elem in obj) this[elem] = obj[elem];
-            if (this.center) {
-                this.offs = new Vec2(
-                    -this.sprite.width/this.scale/2,
-                    this.sprite.height/this.scale/2,
-                );
-            } else {
-                this.offs = new Vec2(0, this.sprite.height/this.scale);
-            }
-        }
-
-        move() {}
-
-        render(ctx) {
-            let sprite = this.sprite;
-            let width = sprite.width/this.scale;
-            let height = sprite.height/this.scale;
-
-            ctx.save();
-            ctx.translate(...toScreen(this.p));
-            if (this.hflip) {
-                ctx.translate(width, 0);
-                ctx.scale(-1, 1);
-            }
-            ctx.drawImage(sprite, ...toScreen(this.offs), width, height);
-            // dot(ctx, "orange", new Vec2(0, 0), 4);
-
-            ctx.restore();
-        }
     };
 
     function makeCloud() {
-        let c = new Bg({
+        let c = new SimpleSprite({
             p: new Vec2(
                 game.nextCloud,
                 getRandom(0.4, 0.85)*canvas_height,
@@ -490,7 +468,7 @@
 
     function makeGround() {
         let sprite = pickRandom(groundSprites);
-        let n = new Bg({
+        let n = new SimpleSprite({
             p: new Vec2(
                 game.nextGround,
                 -GROUND_HEIGHT,
