@@ -515,6 +515,7 @@
         game.noobs.push(n);
     }
 
+    const MTN_ZSCALE = HILL_ZSCALE*HILL_ZSCALE;
     function makeMtn() {
         let left = new Vec2(game.nextMtn, -GROUND_HEIGHT);
         let langle = deg(getRandom(55, 70));
@@ -531,7 +532,7 @@
             top: top,
             right: right,
             layer: -2 + getRandom(-0.1, 0.1), // XXX too far forward?
-            zscale: HILL_ZSCALE*HILL_ZSCALE,
+            zscale: MTN_ZSCALE,
             color: "grey",
         });
         game.nextMtn += getRandom(0.25, 0.5)*(lwidth+rwidth);
@@ -636,7 +637,7 @@
         let spawnPoint = game.birb.p.x + canvas_width;
         let spawnPointC = game.birb.p.x/CLOUD_ZSCALE + canvas_width;
         let spawnPointH = game.birb.p.x/HILL_ZSCALE + canvas_width;
-        let spawnPointM = game.birb.p.x/HILL_ZSCALE/HILL_ZSCALE + canvas_width;
+        let spawnPointM = game.birb.p.x/MTN_ZSCALE + canvas_width;
 
         if (spawnPoint > game.nextGround) makeGround();
         if (spawnPoint > game.nextNote) makeNote();
