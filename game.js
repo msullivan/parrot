@@ -206,7 +206,9 @@
     var $ = function(s) { return document.getElementById(s); };
 
     // Lol.
-    var game = {birb: null, noobs: [], score: 0, penalized: false};
+    var game = {
+        birb: null, noobs: [], score: 0, penalized: false, started: false
+    };
 
     const canvas = $("game");
     const ctx = canvas.getContext("2d");
@@ -240,6 +242,7 @@
     for (let i = 1; i <= 3; i++) {
         mtnSprites.push($("mtn" + i));
     }
+    let introSprite = $("intro");
 
     /////////////////////////////////////////////
 
@@ -790,6 +793,14 @@
 
         ctx.restore();
 
+        if (!game.started) {
+            let x = (canvas_width-introSprite.width/4)/2;
+            let y = canvas_height*0.15;
+            ctx.drawImage(
+                introSprite, x, y, introSprite.width/4, introSprite.height/4
+            );
+        }
+
         // Draw score
         ctx.save();
         ctx.font = "48px sans";
@@ -915,6 +926,10 @@
 
         kd.run(function () { kd.tick(); });
         var stopRunning;
+        kd.SPACE.press(function() {
+            // audio.pause();
+            game.started = true;
+        });
         kd.Q.press(function() {
             // audio.pause();
             stopRunning();
