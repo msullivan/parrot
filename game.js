@@ -298,8 +298,8 @@
                 this.p.y = feet;
                 this.v = new Vec2(0, 0);
                 if (!oldCrashed) {
-                    // game.score -= 3;
-                    // game.penalized = true;
+                    game.score -= 3;
+                    game.penalized = true;
                 }
             } else if (oldCrashed) {
                 this.v.x = conf.SPEED; // XXX
@@ -633,7 +633,7 @@
         // console.log(params.boxes);
         game.noobs.push(new Cloud(params));
 
-        game.nextCloud += getRandom(0.1, 0.5)*canvas_width;
+        game.nextCloud += getRandom(0.3, 0.6)*canvas_width;
         // console.log("new cloud at ", c.p.x);
     }
     function makeNote() {
