@@ -497,6 +497,19 @@
                 return true;
             }
         }
+
+        // renderDebug() {
+        //     // show the placement cloud exclusion hitbox
+        //     ctx.save();
+        //     ctx.strokeStyle = "orange";
+        //     ctx.beginPath();
+        //     ctx.ellipse(
+        //         0, 0,
+        //         this.nocollide, this.nocollide, 0, 0, 2*Math.PI);
+        //     ctx.stroke();
+        //     ctx.restore();
+        // }
+
     };
 
     const HIT_FRAMES = 3;
@@ -578,19 +591,30 @@
             scale: 5,
             sprite: pickRandom(cloudSprites),
             layer: 0,
-            center: true,
+            // center: true,
             zscale: CLOUD_ZSCALE,
             // hflip: randBool(),
             hflip: false,
         };
         let c = new SimpleSprite(params);
+        for (let i = 0; i < game.noobs.length; i++) {
+            let tgt = game.noobs[i];
+            if (tgt.nocollide
+                && circRectHits(tgt.p, tgt.nocollide, c.p, c.width, c.height))
+            {
+                game.nextCloud += 0.1*canvas_width;
+                console.log("REJECT");
+                return;
+            }
+        }
+
+        game.nextCloud += getRandom(0.3, 0.6)*canvas_width;
         game.noobs.push(c);
         params.globalAlpha = 0.5;
         params.layer = 1.2;
         params.boxes = params.sprite.boxes;
         game.noobs.push(new Cloud(params));
 
-        game.nextCloud += getRandom(0.3, 0.6)*canvas_width;
         // console.log("new cloud at ", c.p.x);
     }
     function makeNote() {
@@ -601,11 +625,26 @@
                 getRandom(PARROT_FEET * 1.5,
                           canvas_height-GROUND_HEIGHT-NOTE_SIZE),
             ),
+            center: true,
             sprite: sprite,
             scale: sprite.height/NOTE_SIZE,
             layer: 0.5,
             zscale: 1,
+            nocollide: NOTE_SIZE,
         });
+
+        for (let i = 0; i < game.noobs.length; i++) {
+            let tgt = game.noobs[i];
+            if (tgt instanceof Cloud
+                && circRectHits(c.p, c.nocollide, tgt.p,
+                                tgt.width, tgt.height))
+            {
+                game.nextNote += 0.1*canvas_width;
+                console.log("REJECT NOTE");
+                return;
+            }
+        }
+
         game.noobs.push(c);
         game.nextNote += getRandom(0.2, 0.5)*canvas_width;
         // console.log("new note at ", c.p.x);
