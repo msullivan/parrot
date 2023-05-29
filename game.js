@@ -234,8 +234,6 @@
     let cloudSprites = [];
     for (let i = 1; i <= 5; i++) {
         cloudSprites.push($("cloud" + i));
-        cloudSprites[i-1].boxes = processBoundingBoxes(
-            cloudSprites[i-1], slices=25);
     }
     let noteSprites = [];
     for (let i = 1; i <= 3; i++) {
@@ -924,6 +922,9 @@
     function init() {
         $("fps").value = DEFAULT_FPS;
         $("speed").value = SPEED;
+        cloudSprites.forEach(function(sprite) {
+            sprite.boxes = processBoundingBoxes(sprite, slices=25);
+        });
 
         setupDpr(canvas, ctx);
 
