@@ -529,7 +529,7 @@
             layer: -2 + getRandom(-0.1, 0.1), // XXX too far forward?
             zscale: MTN_ZSCALE,
             scale: 2.25,
-            // globalAlpha: 0.5,
+            globalAlpha: 0.58,
         });
         game.nextMtn += getRandom(0.25, 0.5)*n.width;
         game.noobs.push(n);
