@@ -235,7 +235,7 @@
     const canvas_height = canvas.height;
 
     let groundSprites = [];
-    let groundOffsets = [0, -20, 0];
+    let groundOffsets = [-5, -30, -5];
     for (let i = 0; i < 3; i++) {
         groundSprites.push($("plant" + (i+1)));
         groundSprites[i].offset = groundOffsets[i];
@@ -684,7 +684,7 @@
         let sprite = pickRandom(groundSprites);
         let n = new SimpleSprite({
             p: new Vec2(
-                game.nextGround,
+                game.nextGround + sprite.offset,
                 -GROUND_HEIGHT,
             ),
             sprite: sprite,
