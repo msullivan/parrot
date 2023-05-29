@@ -139,7 +139,7 @@
             clamp(circPos.x, rectPos.x, rectPos.x+width),
             clamp(circPos.y, rectPos.y, rectPos.y+width),
         );
-        return (closest.sub(circPos)).mag2() < rad*rad;
+        return (closest.sub(circPos)).mag2() <= rad*rad;
     }
 
     /////////////// Globals?
@@ -446,6 +446,32 @@
         }
     };
 
+    const HIT_FRAMES = 3;
+    class Cloud extends SimpleSprite {
+        constructor(obj) {
+            super(obj);
+            this.active = true;
+            this.hit = 0;
+        }
+
+        move() {
+            let birb = game.birb;
+            // XXX: multiple frame hits?
+            if (
+                circRectIntersect(
+                    birb.p, 0.01,
+                    this.p, this.width, this.height
+                )
+            ) {
+                this.hit++;
+                if (this.hit == HIT_FRAMES) {
+                    game.score--;
+                    game.penalized = true;
+                }
+            }
+        }
+    };
+
     const CLOUD_ZSCALE = 1;
     function makeCloud() {
         let params = {
@@ -464,7 +490,7 @@
         game.noobs.push(c);
         params.globalAlpha = 0.5;
         params.layer = 1.2;
-        game.noobs.push(new SimpleSprite(params));
+        game.noobs.push(new Cloud(params));
 
         game.nextCloud += getRandom(0.1, 0.5)*canvas_width;
         // console.log("new cloud at ", c.p.x);
