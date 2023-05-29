@@ -891,11 +891,12 @@
         let flyImg = $("fly");
         let fscale = 2;
         let fwidth = flyImg.width / fscale;
-        fly.width = fwidth;
         const flyctx = fly.getContext("2d");
         setupDpr(fly, flyctx);
 
-        flyctx.drawImage(flyImg, 0, 0, fwidth, flyImg.height/fscale);
+        let x = (canvas_width-fwidth)/2;
+
+        flyctx.drawImage(flyImg, x, 0, fwidth, flyImg.height/fscale);
 
         const ON = ["touchstart", "mousedown"];
         const OFF = ["touchend", "touchcancel", "mouseup", "mouseout"];
