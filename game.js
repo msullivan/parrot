@@ -148,7 +148,7 @@
     var $ = function(s) { return document.getElementById(s); };
 
     // Lol.
-    var game = {birb: null, noobs: [], nextNote: -1, nextCloud: 0, score: 0};
+    var game = {birb: null, noobs: [], score: 0, penalized: false};
 
     const canvas = $("game");
     const ctx = canvas.getContext("2d");
@@ -230,7 +230,10 @@
                 this.steps = CRASH_AFRAME * FRAMES_PER;
                 this.p.y = feet;
                 this.v = new Vec2(0, 0);
-                if (!oldCrashed) game.score -= 3;
+                if (!oldCrashed) {
+                    game.score -= 3;
+                    game.penalized = true;
+                }
             } else if (oldCrashed) {
                 this.v.x = conf.SPEED; // XXX
             }
@@ -437,6 +440,7 @@
                 )
             ) {
                 game.score++;
+                game.penalized = false;
                 return true;
             }
         }
@@ -640,8 +644,11 @@
         ctx.restore();
 
         // Draw score
+        ctx.save();
         ctx.font = "48px sans";
+        ctx.fillStyle = game.penalized ? "#8b0000" : "black";
         ctx.fillText(game.score.toString(), 20, 50);
+        ctx.restore();
     }
 
     var touched = false;
