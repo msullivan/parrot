@@ -140,10 +140,6 @@
             clamp(circPos.x, rectPos.x, rectPos.x+width),
             clamp(circPos.y, rectPos.y, rectPos.y+height),
         );
-        // console.log(circPos);
-        // console.log(rectPos);
-        // console.log(closest);
-        // console.log((closest.sub(circPos)).mag());
         return (closest.sub(circPos)).mag2() <= rad*rad;
     }
     function rectContains(pos, rectPos, width, height) {
@@ -173,11 +169,6 @@
         let width = img.width;
         function px(x, y) { return data[(y*width+x)*4 + 3]; }
 
-        console.log(px(0, 0));
-        console.log(px(100, 100));
-        console.log(img.width + "/" + img.height);
-        console.log(px(600, 600));
-
         let sliceSize = (img.width/(slices-1)) | 0;
         let boxes = [];
         for (let i = 0; i < slices; i++) {
@@ -199,8 +190,8 @@
             }
             let box = {corner: new Vec2(start, img.height-bot),
                        width: end-start, height: bot-top+1};
-            console.log("slice " + i + " has " + JSON.stringify(box) + "/"
-                        + [bot, top]);
+            // console.log("slice " + i + " has " + JSON.stringify(box) + "/"
+            //             + [bot, top]);
             boxes.push(box);
         }
 
@@ -482,14 +473,12 @@
                 ctx.scale(-1, 1);
             }
             if (this.globalAlpha !== undefined) {
-                // console.log("!!!!", this.globalAlpha);
                 ctx.globalAlpha = this.globalAlpha;
             }
             ctx.drawImage(
                 this.sprite, ...toScreen(this.offs), this.width, this.height);
 
             if (this.active && conf.DEBUG_DOTS) {
-                // this.renderDebug();
                 dot(ctx, "red", new Vec2(0, 0));
                 ctx.strokeStyle = "blue";
                 ctx.beginPath();
@@ -554,24 +543,15 @@
             )) {
                 return false;
             }
-            // console.log("checking!");
             for (let i = 0; i < this.boxes.length; i++) {
                 let box = this.boxes[i];
 
                 let corner = this.p.add(box.corner);
-                // if (corner.x <= birbpos.x && birbpos.x <= corner.x+box.width) {
-                //     console.log(
-                //         i,
-                //         birbpos,
-                //         corner, box.width, box.height);
-                //     console.log(this.p, box.corner);
-                // }
                 if (
                     circRectHits(
                         birbpos, size,
                         corner, box.width, box.height)
                 ) {
-                    // console.log("hit " + i);
                     return true;
                 }
             }
@@ -596,9 +576,6 @@
             let scale = this.scale;
             let offs = this.offs;
             this.boxes.forEach(function(box) {
-                // let v = offs.add(box.corner.scale(1/scale));
-                // v.y *= -1;
-                // console.log(JSON.stringify(box));
                 let corner = box.corner.add(new Vec2(0, box.height));
                 ctx.rect(...toScreen(corner), box.width, box.height);
             });
@@ -614,13 +591,11 @@
                 getRandom(0.2, 0.85)*canvas_height,
             ),
             scale: 5,
-            // sprite: cloudSprites[4],
             sprite: pickRandom(cloudSprites),
             layer: 0,
             // center: true,
             zscale: CLOUD_ZSCALE,
             // hflip: randBool(),
-            // hflip: true,
             hflip: false,
         };
         let c = new SimpleSprite(params);
@@ -628,7 +603,6 @@
         params.globalAlpha = 0.5;
         params.layer = 1.2;
         params.boxes = params.sprite.boxes;
-        // console.log(params.boxes);
         game.noobs.push(new Cloud(params));
 
         game.nextCloud += getRandom(0.3, 0.6)*canvas_width;
