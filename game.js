@@ -417,29 +417,6 @@
         }
     };
 
-    class Hill {
-        // left, top, right
-        constructor(obj) {
-            // Is this bullshit?
-            for (let elem in obj) this[elem] = obj[elem];
-            this.p = this.right;
-        }
-
-        move() {}
-
-        render(ctx) {
-            //console.log(this);
-            ctx.save();
-            ctx.fillStyle = this.color;
-            ctx.beginPath();
-            ctx.moveTo(...toScreen(this.left));
-            ctx.lineTo(...toScreen(this.top));
-            ctx.lineTo(...toScreen(this.right));
-            ctx.fill();
-            ctx.restore();
-        }
-    };
-
     class SimpleSprite {
         constructor(obj) {
             for (let elem in obj) this[elem] = obj[elem];
@@ -679,29 +656,6 @@
         game.nextMtn += getRandom(0.25, 0.65)*n.width;
         game.noobs.push(n);
     }
-
-    // function makeMtn() {
-    //     let left = new Vec2(game.nextMtn, -GROUND_HEIGHT);
-    //     let langle = deg(getRandom(55, 70));
-    //     let lwidth = getRandom(0.5, 0.8)*canvas_width / 2;
-    //     let height = Math.tan(langle) * lwidth;
-    //     let rangle = getRandom(0.9, 1.1)*langle;
-    //     let rwidth = height/Math.tan(rangle);
-
-    //     let top = left.add(new Vec2(lwidth, height));
-    //     let right = left.add(new Vec2(lwidth+rwidth, 0));
-
-    //     let n = new Hill({
-    //         left: left,
-    //         top: top,
-    //         right: right,
-    //         layer: -2 + getRandom(-0.1, 0.1), // XXX too far forward?
-    //         zscale: MTN_ZSCALE,
-    //         color: "grey",
-    //     });
-    //     game.nextMtn += getRandom(0.25, 0.5)*(lwidth+rwidth);
-    //     game.noobs.push(n);
-    // }
 
     //////////////////////////////////////////////
     function gameSetup() {
