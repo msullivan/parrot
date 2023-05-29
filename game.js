@@ -519,7 +519,23 @@
     }
 
     ///////////////////////////////////////////////
-    function draw() {
+    const SAMPLE_PERIOD = 1000;
+    let lastSampleTime;
+    let frameCount = 0;
+    function trackFps(now) {
+        if (lastSampleTime === undefined) lastSampleTime = now;
+        frameCount++;
+        if (now >= lastSampleTime + SAMPLE_PERIOD) {
+            let measuredFps = frameCount / (now - lastSampleTime) * 1000;
+            $("fps_meter").innerHTML = "FPS: "+Math.round(measuredFps);
+            frameCount = 0;
+            lastSampleTime = now;
+        }
+    }
+
+    function draw(now) {
+        // trackFps(now);
+
         // Draw blue background
         ctx.save();
         ctx.fillStyle = "#87CEEB";
@@ -537,6 +553,12 @@
 
         // ctx.translate(canvas_width/4 - game.birb.p.x, 0);
         game.noobs.forEach(function (noob) {
+            // OK yeah this sucks.
+            // if (noob == game.birb) {
+            //     var data = ctx.getImageData(noob.x|0, noob.y|0, 1, 1).data;
+            //     console.log("!", data[0], data[1], data[2]);
+            // }
+
             ctx.save();
             ctx.translate(canvas_width/4 - game.birb.p.x/noob.zscale, 0);
             noob.render(ctx);
@@ -658,6 +680,7 @@
         canvas.renderOnAddRemove = false;
 
         gameSetup();
+        // ctx.willReadFrequently = true;
 
         // audio.play();
 
