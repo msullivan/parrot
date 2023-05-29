@@ -98,7 +98,8 @@
         new Vec2(1430, -545),
     ];
     const PARROT_FEET_RAW = 900; // eh, approximate
-    const PARROT_SCALE = 10;
+    const PARROT_FILE_SCALE = 0.24;
+    const PARROT_SCALE = 1/(PARROT_FILE_SCALE/2);
 
     const PARROT_CENTER = PARROT_CENTER_RAW.scale(1/PARROT_SCALE);
     const PARROT_BEAK = PARROT_BEAK_RAW.map(
