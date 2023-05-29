@@ -396,6 +396,10 @@
                 ctx.translate(this.width, 0);
                 ctx.scale(-1, 1);
             }
+            if (this.globalAlpha !== undefined) {
+                // console.log("!!!!", this.globalAlpha);
+                ctx.globalAlpha = this.globalAlpha;
+            }
             ctx.drawImage(
                 this.sprite, ...toScreen(this.offs), this.width, this.height);
 
@@ -434,21 +438,26 @@
         }
     };
 
-    const CLOUD_ZSCALE = 2;
+    const CLOUD_ZSCALE = 1;
     function makeCloud() {
-        let c = new SimpleSprite({
+        let params = {
             p: new Vec2(
                 game.nextCloud,
-                getRandom(0.4, 0.85)*canvas_height,
+                getRandom(0.2, 0.85)*canvas_height,
             ),
-            scale: 7,
+            scale: 5,
             sprite: pickRandom(cloudSprites),
             layer: 0,
             center: true,
             zscale: CLOUD_ZSCALE,
             hflip: randBool(),
-        });
+        };
+        let c = new SimpleSprite(params);
         game.noobs.push(c);
+        params.globalAlpha = 0.5;
+        params.layer = 1.2;
+        game.noobs.push(new SimpleSprite(params));
+
         game.nextCloud += getRandom(0.1, 0.5)*canvas_width;
         // console.log("new cloud at ", c.p.x);
     }
