@@ -178,6 +178,10 @@
     for (let i = 1; i <= 5; i++) {
         hillSprites.push($("hill" + i));
     }
+    let mtnSprites = [];
+    for (let i = 1; i <= 3; i++) {
+        mtnSprites.push($("mtn" + i));
+    }
 
     /////////////////////////////////////////////
 
@@ -517,27 +521,42 @@
 
     const MTN_ZSCALE = HILL_ZSCALE*HILL_ZSCALE;
     function makeMtn() {
-        let left = new Vec2(game.nextMtn, -GROUND_HEIGHT);
-        let langle = deg(getRandom(55, 70));
-        let lwidth = getRandom(0.5, 0.8)*canvas_width / 2;
-        let height = Math.tan(langle) * lwidth;
-        let rangle = getRandom(0.9, 1.1)*langle;
-        let rwidth = height/Math.tan(rangle);
-
-        let top = left.add(new Vec2(lwidth, height));
-        let right = left.add(new Vec2(lwidth+rwidth, 0));
-
-        let n = new Hill({
-            left: left,
-            top: top,
-            right: right,
+        let sprite = pickRandom(mtnSprites);
+        console.log(mtnSprites);
+        let n = new SimpleSprite({
+            p: new Vec2(game.nextMtn, -GROUND_HEIGHT),
+            sprite: sprite,
             layer: -2 + getRandom(-0.1, 0.1), // XXX too far forward?
             zscale: MTN_ZSCALE,
-            color: "grey",
+            scale: 2.25,
+            // globalAlpha: 0.5,
         });
-        game.nextMtn += getRandom(0.25, 0.5)*(lwidth+rwidth);
+        game.nextMtn += getRandom(0.25, 0.5)*n.width;
         game.noobs.push(n);
     }
+
+    // function makeMtn() {
+    //     let left = new Vec2(game.nextMtn, -GROUND_HEIGHT);
+    //     let langle = deg(getRandom(55, 70));
+    //     let lwidth = getRandom(0.5, 0.8)*canvas_width / 2;
+    //     let height = Math.tan(langle) * lwidth;
+    //     let rangle = getRandom(0.9, 1.1)*langle;
+    //     let rwidth = height/Math.tan(rangle);
+
+    //     let top = left.add(new Vec2(lwidth, height));
+    //     let right = left.add(new Vec2(lwidth+rwidth, 0));
+
+    //     let n = new Hill({
+    //         left: left,
+    //         top: top,
+    //         right: right,
+    //         layer: -2 + getRandom(-0.1, 0.1), // XXX too far forward?
+    //         zscale: MTN_ZSCALE,
+    //         color: "grey",
+    //     });
+    //     game.nextMtn += getRandom(0.25, 0.5)*(lwidth+rwidth);
+    //     game.noobs.push(n);
+    // }
 
     //////////////////////////////////////////////
     function gameSetup() {
