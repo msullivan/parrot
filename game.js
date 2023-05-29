@@ -694,7 +694,7 @@
     const MTN_ZSCALE = HILL_ZSCALE*HILL_ZSCALE;
     function makeMtn() {
         let sprite = pickRandom(mtnSprites);
-        let height = 0.775 * getRandom(0.9, 1.1);
+        let height = 0.775 * getRandom(0.8, 1.2);
         let scale = mtnSprites[2].height/(height*canvas_height);
         let n = new SimpleSprite({
             p: new Vec2(game.nextMtn, -GROUND_HEIGHT),
