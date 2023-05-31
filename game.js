@@ -561,7 +561,7 @@
 
             let scale = this.scale;
             let offs = this.offs;//d.add(new Vec2(0, -this.height));
-            this.boxes = this.boxes.map(function(box) {
+            this.boxes = this.boxes.map((box) => {
                 // let v = offs.add(box.corner.scale(1/scale));
                 return {
                     corner: box.corner.scale(1/scale).add(offs),
@@ -613,7 +613,7 @@
             ctx.beginPath();
             let scale = this.scale;
             let offs = this.offs;
-            this.boxes.forEach(function(box) {
+            this.boxes.forEach((box) => {
                 let corner = box.corner.add(new Vec2(0, box.height));
                 ctx.rect(...toScreen(corner), box.width, -box.height);
             });
@@ -808,12 +808,12 @@
         ctx.scale(1, -1);
 
         // Sort by layers
-        game.noobs.sort(function (n1, n2) {
+        game.noobs.sort((n1, n2) => {
             return ((n1.layer ?? 0) - (n2.layer ?? 0));
         });
 
         // ctx.translate(canvas_width/4 - game.birb.p.x, 0);
-        game.noobs.forEach(function (noob) {
+        game.noobs.forEach((noob) => {
             // OK yeah this sucks.
             // if (noob == game.birb) {
             //     var data = ctx.getImageData(noob.x|0, noob.y|0, 1, 1).data;
@@ -863,11 +863,11 @@
         if (spawnPointH > game.nextHill) makeHill();
         if (spawnPointM > game.nextMtn) makeMtn();
 
-        game.noobs = game.noobs.filter(function (noob) {
+        game.noobs = game.noobs.filter((noob) => {
             return noob.move() !== true;
         });
         let n = game.noobs.length;
-        game.noobs = game.noobs.filter(function (noob) {
+        game.noobs = game.noobs.filter((noob) => {
             let width = noob.width ?? 0;
             return noob.p.x + width > game.birb.p.x/noob.zscale - canvas_width;
         });
@@ -904,7 +904,7 @@
             requestAnimationFrame(cb);
         }
         cb();
-        var stopRunning = function() { stop = true; };
+        var stopRunning = () => { stop = true; };
         return stopRunning;
     }
 
@@ -933,13 +933,13 @@
 
         const ON = ["touchstart", "mousedown"];
         const OFF = ["touchend", "touchcancel", "mouseup", "mouseout"];
-        ON.forEach(function(on) {
+        ON.forEach((on) => {
             fly.addEventListener(
-                on, function(ev) { touch(ev, true) });
+                on, (ev) => { touch(ev, true) });
         });
-        OFF.forEach(function(off) {
+        OFF.forEach((off) => {
             fly.addEventListener(
-                off, function(ev) { touch(ev, false) });
+                off, (ev) => { touch(ev, false) });
         });
     }
 
@@ -951,7 +951,7 @@
 
         $("fps").value = DEFAULT_FPS;
         $("speed").value = SPEED;
-        cloudSprites.forEach(function(sprite) {
+        cloudSprites.forEach((sprite) => {
             sprite.boxes = processBoundingBoxes(sprite, slices=25);
         });
 
@@ -964,14 +964,14 @@
 
         // audio.play();
 
-        kd.run(function () { kd.tick(); });
+        kd.run(() => { kd.tick(); });
         var stopRunning;
-        kd.Q.press(function() {
+        kd.Q.press(() => {
             // audio.pause();
             stopRunning();
         });
         setupButtons();
-        document.addEventListener("keydown", function(evt) {
+        document.addEventListener("keydown", (evt) => {
             if (evt.keyCode == " ".charCodeAt(0)) {
                 evt.preventDefault();
             }
@@ -984,7 +984,7 @@
 
         $("loading").textContent = "";
         stopRunning = runAtFramerate(
-            tick, draw, function() { return conf.FPS });
+            tick, draw, () => { return conf.FPS });
     }
     window.onload = init;
 
