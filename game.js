@@ -111,11 +111,7 @@
     function deg(f) { return f * Math.PI / 180; }
     function clamp(val, min, max) { return Math.min(Math.max(min, val), max); }
 
-    function xToScreen(x) { return x; }
-    function yToScreen(y) { return -y; }
-    function toScreen(v) {
-        return [xToScreen(v.x), yToScreen(v.y)];
-    }
+    function toScreen(v) { return [v.x, v.y]; }
 
     function getRandom(min, max) {
         return Math.random() * (max - min) + min;
@@ -134,6 +130,15 @@
         ctx.beginPath();
         ctx.ellipse(...toScreen(pos), radius, radius, 0, 0, 2*Math.PI);
         ctx.fill();
+        ctx.restore();
+    }
+
+    // drawImage on mirrored contexts
+    function drawImage(ctx, img, dx, dy, width, height) {
+        ctx.save();
+        ctx.translate(dx, dy);
+        ctx.scale(1, -1);
+        ctx.drawImage(img, 0, 0, width, height);
         ctx.restore();
     }
 
@@ -373,7 +378,7 @@
 
         flightAngle() {
             let offset = conf.TRIANGLE_BIRD ? 0 : deg(27);
-            return this.crashed ? 0 : -this.v.angle() + offset;
+            return this.crashed ? 0 : this.v.angle() - offset;
         }
 
         rawBeakOffset() {
@@ -384,7 +389,7 @@
             }
         }
         beakOffset() {
-            return this.rawBeakOffset().rotate(-this.flightAngle());
+            return this.rawBeakOffset().rotate(this.flightAngle());
         }
         beakPos() { return this.p.add(this.beakOffset()); }
         headPos() {
@@ -392,7 +397,7 @@
                 return this.beakPos();
             } else {
                 return this.rawBeakOffset().sub(new Vec2(10, -2))
-                    .rotate(-this.flightAngle()).add(this.p);
+                    .rotate(this.flightAngle()).add(this.p);
             }
         }
 
@@ -401,7 +406,7 @@
             ctx.strokeStyle = "red";
             ctx.lineWidth = 2;
             ctx.translate(...toScreen(this.p));
-            ctx.rotate(this.crashed ? 0 : -this.v.angle());
+            ctx.rotate(this.flightAngle());
             const len = 30;
             const wangle = this.wing_angle;
             ctx.beginPath();
@@ -423,9 +428,10 @@
             ctx.save();
             ctx.translate(...toScreen(this.p));
             ctx.rotate(this.flightAngle());
-            ctx.drawImage(
+            drawImage(
+                ctx,
                 sprite,
-                -PARROT_CENTER.x, PARROT_CENTER.y,
+                -PARROT_CENTER.x, -PARROT_CENTER.y,
                 sprite.width/scale, sprite.height/scale,
             );
 
@@ -489,7 +495,7 @@
             if (this.globalAlpha !== undefined) {
                 ctx.globalAlpha = this.globalAlpha;
             }
-            ctx.drawImage(
+            drawImage(ctx,
                 this.sprite, ...toScreen(this.drawOffs),
                 this.width, this.height);
 
@@ -497,7 +503,7 @@
                 dot(ctx, "red", new Vec2(0, 0));
                 ctx.strokeStyle = "blue";
                 ctx.beginPath();
-                ctx.rect(...toScreen(this.drawOffs), this.width, this.height);
+                ctx.rect(this.offs.x, this.offs.y, this.width, this.height);
                 ctx.stroke();
             }
 
@@ -607,7 +613,7 @@
             let offs = this.offs;
             this.boxes.forEach(function(box) {
                 let corner = box.corner.add(new Vec2(0, box.height));
-                ctx.rect(...toScreen(corner), box.width, box.height);
+                ctx.rect(...toScreen(corner), box.width, -box.height);
             });
             ctx.stroke();
         }
@@ -797,6 +803,7 @@
         // Game state -- translated
         ctx.save();
         ctx.translate(0, canvas_height - GROUND_HEIGHT);
+        ctx.scale(1, -1);
 
         // Sort by layers
         game.noobs.sort(function (n1, n2) {
