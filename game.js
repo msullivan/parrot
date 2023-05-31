@@ -84,7 +84,8 @@
         up:    new Vec2(0, 1),
     };
 
-    const PARROT_CENTER_RAW = new Vec2(1210, -607);
+    const PARROT_RAW_Y = 1452;
+    const PARROT_CENTER_RAW = new Vec2(1210, -607+PARROT_RAW_Y);
     const PARROT_BEAK_RAW = [
         new Vec2(1425, -549),
         new Vec2(1425, -549),
@@ -99,14 +100,15 @@
         new Vec2(1430, -545),
         new Vec2(1430, -545),
     ];
-    const PARROT_FEET_RAW = 900; // eh, approximate
+    PARROT_BEAK_RAW.forEach((v) => v.y += PARROT_RAW_Y);
+    const PARROT_FEET_RAW = PARROT_RAW_Y - 900; // eh, approximate
     const PARROT_FILE_SCALE = 0.24;
     const PARROT_SCALE = 1/(PARROT_FILE_SCALE/2);
 
     const PARROT_CENTER = PARROT_CENTER_RAW.scale(1/PARROT_SCALE);
     const PARROT_BEAK = PARROT_BEAK_RAW.map(
         function (v) { return v.scale(1/PARROT_SCALE); });
-    const PARROT_FEET = (PARROT_FEET_RAW + PARROT_CENTER_RAW.y) / PARROT_SCALE;
+    const PARROT_FEET = (PARROT_CENTER_RAW.y - PARROT_FEET_RAW) / PARROT_SCALE;
 
     function deg(f) { return f * Math.PI / 180; }
     function clamp(val, min, max) { return Math.min(Math.max(min, val), max); }
@@ -136,9 +138,9 @@
     // drawImage on mirrored contexts
     function drawImage(ctx, img, dx, dy, width, height) {
         ctx.save();
-        ctx.translate(dx, dy);
+        ctx.translate(dx, dy+height/2);
         ctx.scale(1, -1);
-        ctx.drawImage(img, 0, 0, width, height);
+        ctx.drawImage(img, 0, -height/2, width, height);
         ctx.restore();
     }
 
@@ -378,7 +380,7 @@
 
         flightAngle() {
             let offset = conf.TRIANGLE_BIRD ? 0 : deg(27);
-            return this.crashed ? 0 : this.v.angle() - offset;
+            return this.crashed ? 0 : (this.v.angle() - offset);
         }
 
         rawBeakOffset() {
@@ -451,8 +453,8 @@
                 // ctx.strokeStyle = "orange";
                 // ctx.translate(...toScreen(this.p));
                 // ctx.beginPath();
-                // ctx.moveTo(birdSprites[0].width/2, PARROT_FEET);
-                // ctx.lineTo(0, PARROT_FEET);
+                // ctx.moveTo(-birdSprites[0].width/2/2, -PARROT_FEET);
+                // ctx.lineTo(0, -PARROT_FEET);
                 // ctx.stroke();
                 // ctx.restore();
             }
@@ -496,7 +498,7 @@
                 ctx.globalAlpha = this.globalAlpha;
             }
             drawImage(ctx,
-                this.sprite, ...toScreen(this.drawOffs),
+                this.sprite, ...toScreen(this.offs),
                 this.width, this.height);
 
             if (this.active && conf.DEBUG_DOTS) {
@@ -659,7 +661,7 @@
         let c = new Note({
             p: new Vec2(
                 game.nextNote,
-                getRandom(PARROT_FEET * 1.5,
+                getRandom(GROUND_HEIGHT*0.5,
                           canvas_height-GROUND_HEIGHT-NOTE_SIZE),
             ),
             center: true,
