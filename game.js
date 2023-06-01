@@ -1,3 +1,5 @@
+import { test } from "./gl.js";
+
 //////////// Content?
 //////////// Constants and shit
 const GROUND_HEIGHT = 90;
@@ -235,7 +237,8 @@ let game = {
 };
 
 const canvas = $("game");
-const ctx = canvas.getContext("2d");
+// const ctx = canvas.getContext("2d");
+const ctx = null;
 const canvas_width = canvas.width;
 const canvas_height = canvas.height;
 
@@ -938,6 +941,16 @@ function setupButtons() {
 }
 
 function init() {
+    const gl = canvas.getContext("webgl2");
+    if (gl === null) {
+        alert(
+            "Unable to initialize WebGL. Your browser or machine may not support it."
+        );
+    }
+    test(gl, {height: canvas_height, width: canvas_width});
+
+    return;
+
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('debug')) {
         $('debug_config').hidden = '';
