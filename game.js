@@ -184,7 +184,7 @@
     }
     //
     function getImageData(img) {
-        var canvas = document.createElement('canvas');
+        let canvas = document.createElement('canvas');
         canvas.height = img.height;
         canvas.width = img.width;
         let ctx = canvas.getContext('2d');
@@ -193,7 +193,7 @@
     }
 
     function processBoundingBoxes(img, slices) {
-        var data = getImageData(img).data;
+        let data = getImageData(img).data;
         let width = img.width;
         function px(x, y) { return data[(y*width+x)*4 + 3]; }
 
@@ -229,10 +229,10 @@
     /////////////// Globals?
 
     /* "Most of what I want from jquery" */
-    var $ = function(s) { return document.getElementById(s); };
+    let $ = function(s) { return document.getElementById(s); };
 
     // Lol.
-    var game = {
+    let game = {
         birb: null, noobs: [], score: -0, penalized: false, started: false
     };
 
@@ -339,7 +339,7 @@
             }
 
             // XXX: Debug! Sideways velocity!
-            var side = 0;
+            let side = 0;
             if (kd.A.isDown() || kd.LEFT.isDown()) side -= 0.2;
             if (kd.D.isDown() || kd.RIGHT.isDown()) side += 0.2;
             this.v = this.v.add(directions.right.scale(side));
@@ -816,7 +816,7 @@
         game.noobs.forEach((noob) => {
             // OK yeah this sucks.
             // if (noob == game.birb) {
-            //     var data = ctx.getImageData(noob.x|0, noob.y|0, 1, 1).data;
+            //     let data = ctx.getImageData(noob.x|0, noob.y|0, 1, 1).data;
             //     console.log("!", data[0], data[1], data[2]);
             // }
 
@@ -841,7 +841,7 @@
         drawText(game.score.toString(), font, new Vec2(20, 70));
     }
 
-    var touched = false;
+    let touched = false;
     function touch(ev, on) {
         ev.preventDefault();
         touched = on;
@@ -877,16 +877,16 @@
 
     // this is fucked up
     function runAtFramerate(tick, draw, getFps) {
-        var last = 0;
-        var lastReal = 0;
-        var stop = false;
+        let last = 0;
+        let lastReal = 0;
+        let stop = false;
         function cb() {
             if (stop) return;
-            var interval = Math.floor(1000/getFps());
+            let interval = Math.floor(1000/getFps());
 
             if (last == null) return;
-            var start = now();
-            var since = start - lastReal;
+            let start = now();
+            let since = start - lastReal;
             lastReal = start;
 
             let iters = 0;
@@ -904,12 +904,12 @@
             requestAnimationFrame(cb);
         }
         cb();
-        var stopRunning = () => { stop = true; };
+        let stopRunning = () => { stop = true; };
         return stopRunning;
     }
 
     function setupDpr(canvas, ctx) {
-        var dpr = window.devicePixelRatio || 1;
+        let dpr = window.devicePixelRatio || 1;
         let width = canvas.width;
         let height = canvas.height;
         canvas.width = width * dpr;
@@ -965,7 +965,7 @@
         // audio.play();
 
         kd.run(() => { kd.tick(); });
-        var stopRunning;
+        let stopRunning;
         kd.Q.press(() => {
             // audio.pause();
             stopRunning();
