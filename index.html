@@ -14,7 +14,7 @@
   <body>
     <canvas id="game" width="960" height="640"></canvas><br>
     <canvas id="fly_button" width="960" height="151"></canvas>
-    <div id="fps_meter"></div>
+    <div id="fps_box">FPS: <span id="fps_meter"></span></div>
 
     <!-- <div id="directions"> -->
     <!--   Spacebar: fly<br> -->
@@ -24,7 +24,6 @@
       <input type="checkbox" id="debug_dots" class="bool"> Show debug dots<br>
       <input type="checkbox" id="triangle_bird" class="bool"> Use triangle bird<br>
       <input type="checkbox" id="debug_movement" class="bool"> Use debug movement<br>
-      <input type="checkbox" id="show_fps" class="bool"> Show FPS<br>
       <input type="number" id="fps" maxlength="2" class="int"> Target FPS<br>
       <input type="number" id="speed" maxlength="2" class="float"> Speed<br>
     </div>

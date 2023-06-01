@@ -13,7 +13,6 @@ const CONFIG = {
     // DEBUG_DOTS: true,
     // FPS: 30,
     // DEBUG_MOVEMENT: true,
-    // SHOW_FPS: true,
 };
 
 const configHandler = {
@@ -782,11 +781,7 @@ function trackFps(now) {
     frameCount++;
     if (now >= lastSampleTime + SAMPLE_PERIOD) {
         let measuredFps = frameCount / (now - lastSampleTime) * 1000;
-        if (conf.SHOW_FPS) {
-            $("fps_meter").innerHTML = "FPS: "+Math.round(measuredFps);
-        } else {
-            $("fps_meter").innerHTML = "";
-        }
+        $("fps_meter").innerHTML = Math.round(measuredFps);
         frameCount = 0;
         lastSampleTime = now;
     }
