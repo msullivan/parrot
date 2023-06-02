@@ -1,35 +1,5 @@
 // used a bunch from https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/
 
-// Vertex shader program
-const vsSource = `
-    attribute vec4 aVertexPosition;
-    uniform mat4 uModelViewMatrix;
-    uniform mat4 uProjectionMatrix;
-
-    varying highp vec2 vTextureCoord;
-
-    void main() {
-      vTextureCoord = aVertexPosition.xy;
-      gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
-    }
-`;
-
-const fsSource = `
-    precision highp float;
-
-    varying highp vec2 vTextureCoord;
-    uniform sampler2D uSampler;
-    uniform float alpha;
-    void main() {
-      // gl_FragColor = vec4(alpha, 0, 0, 1.0);
-      vec4 textureColor = texture2D(uSampler, vec2(vTextureCoord.x, vTextureCoord.y));
-      gl_FragColor = vec4(textureColor.rgb, alpha*textureColor.a);
-      // gl_FragColor = vec4(textureColor.rgb, alpha + (1.0-alpha)*textureColor.a);
-      // gl_FragColor = vec4(vTextureCoord, 0, 1);
-    }
-`;
-
-
 ////////////////////////
 //
 // creates a shader of the given type, uploads the source and
@@ -109,8 +79,6 @@ function initPositionBuffer(gl) {
 
   // Now create an array of positions for the square.
   const positions = [1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0];
-  // const positions = [1.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0, -1.0];
-  // const positions = [0.0, 0.0, -1.0, 0.0, 0.0, -1.0, -1.0, -1.0];
 
   // Now pass the list of positions into WebGL to build the
   // shape. We do this by creating a Float32Array from the
@@ -180,8 +148,32 @@ function loadTexture(gl, image) {
 
 ////////////////////////
 
+const vsSource = `
+    attribute vec4 aVertexPosition;
+    uniform mat4 uModelViewMatrix;
+    uniform mat4 uProjectionMatrix;
+
+    varying highp vec2 vTextureCoord;
+
+    void main() {
+      vTextureCoord = aVertexPosition.xy;
+      gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+    }
+`;
+
+const fsSource = `
+    precision highp float;
+
+    varying highp vec2 vTextureCoord;
+    uniform sampler2D uSampler;
+    uniform float alpha;
+    void main() {
+      vec4 textureColor = texture2D(uSampler, vTextureCoord);
+      gl_FragColor = vec4(textureColor.rgb, alpha*textureColor.a);
+    }
+`;
+
 class CustomCanvas {
-    #globalAlpha = 1.0;
     constructor(gl, sizes) {
         this.gl = gl;
         this.projectionMatrix = mat4.create();
@@ -232,29 +224,28 @@ class CustomCanvas {
         mat4.rotateZ(this.viewMatrix, this.viewMatrix, theta);
     }
 
-    set globalAlpha(x) {
-        // xxx who cares?
-        if (this.x !== this.#globalAlpha) {
-            // console.log(x);
-            this.gl.uniform1f(
-                this.programInfo.uniformLocations.alpha,
-                x,
-            );
-        }
-        this.#globalAlpha = x;
-    }
-    get globalAlpha() { return this.#globalAlpha; }
+    _setUniforms() {
+        const gl = this.gl;
+        gl.uniform1f(
+            this.programInfo.uniformLocations.alpha,
+            this.globalAlpha,
+        );
+        gl.uniformMatrix4fv(
+            this.programInfo.uniformLocations.modelViewMatrix,
+            false,
+            this.viewMatrix,
+        );
+    };
 
     translate(dx, dy) {
         const dv = vec3.create();
         vec3.set(dv, dx, dy, 0);
-        // console.log(dv);
-        // console.log(this.viewMatrix);
         mat4.translate(this.viewMatrix, this.viewMatrix, dv);
     }
 
     save() {
         this.stack.push({view: this.viewMatrix, alpha: this.globalAlpha});
+
         let n = mat4.create();
         mat4.copy(n, this.viewMatrix);
         this.viewMatrix = n;
@@ -276,15 +267,7 @@ class CustomCanvas {
         this.translate(dx, dy);
         this.scale(width, height);
 
-        // let asdf = vec3.create();
-        // mat4.getTranslation(asdf, this.viewMatrix);
-        // console.log(this.viewMatrix);
-        // console.log(asdf);
-        gl.uniformMatrix4fv(
-            this.programInfo.uniformLocations.modelViewMatrix,
-            false,
-            this.viewMatrix,
-        );
+        this._setUniforms();
 
         const unit = 0
         gl.activeTexture(gl.TEXTURE0 + unit);

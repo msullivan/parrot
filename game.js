@@ -146,7 +146,6 @@ function drawImage(ctx, img, dx, dy, width, height) {
 }
 
 function drawText(string, font, pos) {
-    // NB pos is pure screen coordinates
     let tgtHeight = 48;
     let refHeight = font[0].height;
     let scale = refHeight/tgtHeight;
@@ -158,7 +157,7 @@ function drawText(string, font, pos) {
         let glyph = font[idx];
         // console.log(i, c, font, idx, glyph);
         let h = glyph.height/scale;
-        ctx.drawImage(glyph, pos.x, pos.y - h, glyph.width/scale, h);
+        ctx.drawImage(glyph, pos.x, pos.y, glyph.width/scale, h);
         pos = pos.add(new Vec2(glyph.width/scale + 3, 0));
 
     }
@@ -827,16 +826,17 @@ function draw(now) {
     ctx.restore();
 
     if (!game.started) {
-        let x = (canvas_width-introSprite.width/4)/2;
-        let y = canvas_height*0.15;
+        let iscale = 4;
+        let x = (canvas_width-introSprite.width/iscale)/2;
+        let y = canvas_height*(1-0.15)-introSprite.height/iscale;
         ctx.drawImage(
-            introSprite, x, y, introSprite.width/4, introSprite.height/4
+            introSprite, x, y, introSprite.width/iscale, introSprite.height/iscale
         );
     }
 
     // Draw score
     let font = game.penalized ? redFont : orangeFont;
-    drawText(game.score.toString(), font, new Vec2(20, 70));
+    drawText(game.score.toString(), font, new Vec2(20, canvas_height-70));
 }
 
 let touched = false;
@@ -913,7 +913,6 @@ function setupDpr(canvas, ctx) {
     canvas.width = width * dpr;
     canvas.height = height * dpr;
     if (ctx.gl) {
-        console.log("YO");
         ctx.gl.viewport(0, 0, canvas.width, canvas.height);
         ctx.setProjection(canvas.width, canvas.height);
     }
