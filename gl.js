@@ -19,10 +19,12 @@ const fsSource = `
 
     varying highp vec2 vTextureCoord;
     uniform sampler2D uSampler;
+    uniform float alpha;
     void main() {
-      // gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0);
-      vec4 textureColor = texture2D(uSampler, vec2(vTextureCoord.x, 1.0-vTextureCoord.y));
-      gl_FragColor = vec4(textureColor.rgb, textureColor.a);
+      // gl_FragColor = vec4(alpha, 0, 0, 1.0);
+      vec4 textureColor = texture2D(uSampler, vec2(vTextureCoord.x, vTextureCoord.y));
+      gl_FragColor = vec4(textureColor.rgb, alpha*textureColor.a);
+      // gl_FragColor = vec4(textureColor.rgb, alpha + (1.0-alpha)*textureColor.a);
       // gl_FragColor = vec4(vTextureCoord, 0, 1);
     }
 `;
@@ -169,8 +171,8 @@ function loadTexture(gl, image) {
     );
 
     gl.generateMipmap(gl.TEXTURE_2D);
-    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 
     return texture;
@@ -178,80 +180,148 @@ function loadTexture(gl, image) {
 
 ////////////////////////
 
-export function test(gl, sizes, image) {
-    const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
-    const programInfo = {
-        program: shaderProgram,
-        attribLocations: {
-            vertexPosition: gl.getAttribLocation(shaderProgram, "aVertexPosition"),
-        },
-        uniformLocations: {
-            projectionMatrix: gl.getUniformLocation(shaderProgram, "uProjectionMatrix"),
-            modelViewMatrix: gl.getUniformLocation(shaderProgram, "uModelViewMatrix"),
-            uSampler: gl.getUniformLocation(shaderProgram, "uSampler"),
-        },
-    };
+class CustomCanvas {
+    #globalAlpha = 1.0;
+    constructor(gl, sizes) {
+        this.gl = gl;
+        this.projectionMatrix = mat4.create();
 
-    const buffers = initBuffers(gl);
+        this.viewMatrix = mat4.create();
+        this.stack = [];
 
-    const texture = loadTexture(gl, image);
+        ///
+
+        let shaderProgram = initShaderProgram(gl, vsSource, fsSource);
+        this.programInfo = {
+            program: shaderProgram,
+            attribLocations: {
+                vertexPosition: gl.getAttribLocation(shaderProgram, "aVertexPosition"),
+            },
+            uniformLocations: {
+                projectionMatrix: gl.getUniformLocation(shaderProgram, "uProjectionMatrix"),
+                modelViewMatrix: gl.getUniformLocation(shaderProgram, "uModelViewMatrix"),
+                uSampler: gl.getUniformLocation(shaderProgram, "uSampler"),
+                alpha: gl.getUniformLocation(shaderProgram, "alpha"),
+            },
+        };
+
+        this.buffers = initBuffers(gl);
+
+        setPositionAttribute(gl, this.buffers, this.programInfo);
+        gl.useProgram(this.programInfo.program);
+        this.setProjection(sizes.width, sizes.height);
+        this.globalAlpha = 1.0;
+    }
+
+    setProjection(width, height) {
+        mat4.ortho(this.projectionMatrix, 0, width, 0, height, -1, 1);
+        this.gl.uniformMatrix4fv(
+            this.programInfo.uniformLocations.projectionMatrix,
+            false,
+            this.projectionMatrix
+        );
+    }
+
+    scale(x, y) {
+        const scalev = vec3.create();
+        vec3.set(scalev, x, y, 1);
+        mat4.scale(this.viewMatrix, this.viewMatrix, scalev);
+    }
+
+    rotate(theta) {
+        mat4.rotateZ(this.viewMatrix, this.viewMatrix, theta);
+    }
+
+    set globalAlpha(x) {
+        // xxx who cares?
+        if (this.x !== this.#globalAlpha) {
+            // console.log(x);
+            this.gl.uniform1f(
+                this.programInfo.uniformLocations.alpha,
+                x,
+            );
+        }
+        this.#globalAlpha = x;
+    }
+    get globalAlpha() { return this.#globalAlpha; }
+
+    translate(dx, dy) {
+        const dv = vec3.create();
+        vec3.set(dv, dx, dy, 0);
+        // console.log(dv);
+        // console.log(this.viewMatrix);
+        mat4.translate(this.viewMatrix, this.viewMatrix, dv);
+    }
+
+    save() {
+        this.stack.push({view: this.viewMatrix, alpha: this.globalAlpha});
+        let n = mat4.create();
+        mat4.copy(n, this.viewMatrix);
+        this.viewMatrix = n;
+    }
+
+    restore() {
+        let res = this.stack.pop();
+        this.viewMatrix = res.view;
+        this.globalAlpha = res.alpha;
+    }
+
+    drawImage(img, dx, dy, width, height) {
+        const gl = this.gl;
+        if (img.texture === undefined) {  // lol
+            img.texture = loadTexture(gl, img);
+        }
+
+        this.save();
+        this.translate(dx, dy);
+        this.scale(width, height);
+
+        // let asdf = vec3.create();
+        // mat4.getTranslation(asdf, this.viewMatrix);
+        // console.log(this.viewMatrix);
+        // console.log(asdf);
+        gl.uniformMatrix4fv(
+            this.programInfo.uniformLocations.modelViewMatrix,
+            false,
+            this.viewMatrix,
+        );
+
+        const unit = 0
+        gl.activeTexture(gl.TEXTURE0 + unit);
+        gl.bindTexture(gl.TEXTURE_2D, img.texture);
+        gl.uniform1i(this.programInfo.uniformLocations.uSampler, unit);
+
+        {
+            const offset = 0;
+            const vertexCount = 4;
+            gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
+        }
+
+        this.restore();
+    }
+}
+
+
+export function setupGL(canvas, sizes) {
+    const gl = canvas.getContext("webgl2",{
+        alpha: false,
+        premultipliedAlpha: false
+    });
+    if (gl === null) {
+        alert(
+            "Unable to initialize WebGL. Your browser or machine may not support it."
+        );
+    }
+
+    let ctx = new CustomCanvas(gl, sizes);
 
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); // sigh
 
     ///
-    gl.clearColor(0x87/255, 0xce/255, 0xeb/255, 1.0);
+    gl.clearColor(0x87/255, 0xce/255, 0xeb/255, 1.0); // XXX
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-    // projection
-    const projectionMatrix = mat4.create();
-    mat4.ortho(projectionMatrix, 0, sizes.width, 0, sizes.height, -1, 1);
-
-    // view
-    const scale = 2;
-    const scalev = vec3.create();
-    vec3.set(scalev, image.width/scale, image.height/scale, 1);
-
-    const modelViewMatrix = mat4.create();
-    mat4.translate(
-        modelViewMatrix, // destination matrix
-        modelViewMatrix, // matrix to translate
-        [100, 200, 0]
-    );
-    mat4.scale(modelViewMatrix, modelViewMatrix, scalev);
-
-    ///////
-    // Tell WebGL how to pull out the positions from the position
-    // buffer into the vertexPosition attribute.
-    setPositionAttribute(gl, buffers, programInfo);
-
-    // Tell WebGL to use our program when drawing
-    gl.useProgram(programInfo.program);
-
-    // Set the shader uniforms
-    gl.uniformMatrix4fv(
-        programInfo.uniformLocations.projectionMatrix,
-        false,
-        projectionMatrix
-    );
-    gl.uniformMatrix4fv(
-        programInfo.uniformLocations.modelViewMatrix,
-        false,
-        modelViewMatrix
-    );
-
-    const unit = 0
-    gl.activeTexture(gl.TEXTURE0 + unit);
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.uniform1i(programInfo.uniformLocations.uSampler, unit);
-
-
-    {
-        const offset = 0;
-        const vertexCount = 4;
-        gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
-    }
-
-
+    return ctx;
 }

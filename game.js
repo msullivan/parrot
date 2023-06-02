@@ -1,4 +1,4 @@
-import { test } from "./gl.js";
+import { setupGL } from "./gl.js";
 
 //////////// Content?
 //////////// Constants and shit
@@ -137,11 +137,12 @@ function dot(ctx, color, pos, radius) {
 
 // drawImage on mirrored contexts
 function drawImage(ctx, img, dx, dy, width, height) {
-    ctx.save();
-    ctx.translate(dx, dy+height/2);
-    ctx.scale(1, -1);
-    ctx.drawImage(img, 0, -height/2, width, height);
-    ctx.restore();
+    ctx.drawImage(img, dx, dy, width, height);
+    // ctx.save();
+    // ctx.translate(dx, dy+height/2);
+    // ctx.scale(1, -1);
+    // ctx.drawImage(img, 0, -height/2, width, height);
+    // ctx.restore();
 }
 
 function drawText(string, font, pos) {
@@ -237,10 +238,9 @@ let game = {
 };
 
 const canvas = $("game");
-// const ctx = canvas.getContext("2d");
-const ctx = null;
 const canvas_width = canvas.width;
 const canvas_height = canvas.height;
+const ctx = setupGL(canvas, {height: canvas_height, width: canvas_width});
 
 let groundSprites = [];
 let groundOffsets = [-5, -30, -5];
@@ -795,14 +795,15 @@ function draw(now) {
 
     // Draw blue background
     ctx.save();
-    ctx.fillStyle = "#87CEEB";
-    ctx.fillRect(0, 0, canvas_width, canvas_height);
+    // ctx.fillStyle = "#87CEEB";
+    // ctx.fillRect(0, 0, canvas_width, canvas_height);
+    ctx.gl.clear(ctx.gl.COLOR_BUFFER_BIT);
     ctx.restore();
 
     // Game state -- translated
     ctx.save();
-    ctx.translate(0, canvas_height - GROUND_HEIGHT);
-    ctx.scale(1, -1);
+    ctx.translate(0, GROUND_HEIGHT);
+    // ctx.scale(1, -1);
 
     // Sort by layers
     game.noobs.sort((n1, n2) => {
@@ -911,6 +912,11 @@ function setupDpr(canvas, ctx) {
     let height = canvas.height;
     canvas.width = width * dpr;
     canvas.height = height * dpr;
+    if (ctx.gl) {
+        console.log("YO");
+        ctx.gl.viewport(0, 0, canvas.width, canvas.height);
+        ctx.setProjection(canvas.width, canvas.height);
+    }
     ctx.scale(dpr, dpr);
     canvas.style.width = width + 'px';
     canvas.style.height = height + 'px';
@@ -941,16 +947,6 @@ function setupButtons() {
 }
 
 function init() {
-    const gl = canvas.getContext("webgl2");
-    if (gl === null) {
-        alert(
-            "Unable to initialize WebGL. Your browser or machine may not support it."
-        );
-    }
-    test(gl, {height: canvas_height, width: canvas_width}, birdSprites[0]);
-
-    return;
-
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('debug')) {
         $('debug_config').hidden = '';
