@@ -947,7 +947,7 @@ function init() {
             "Unable to initialize WebGL. Your browser or machine may not support it."
         );
     }
-    test(gl, {height: canvas_height, width: canvas_width});
+    test(gl, {height: canvas_height, width: canvas_width}, birdSprites[0]);
 
     return;
 

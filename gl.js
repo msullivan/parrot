@@ -5,14 +5,25 @@ const vsSource = `
     attribute vec4 aVertexPosition;
     uniform mat4 uModelViewMatrix;
     uniform mat4 uProjectionMatrix;
+
+    varying highp vec2 vTextureCoord;
+
     void main() {
+      vTextureCoord = aVertexPosition.xy;
       gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
     }
 `;
 
 const fsSource = `
+    precision highp float;
+
+    varying highp vec2 vTextureCoord;
+    uniform sampler2D uSampler;
     void main() {
-      gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0);
+      // gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0);
+      vec4 textureColor = texture2D(uSampler, vec2(vTextureCoord.x, 1.0-vTextureCoord.y));
+      gl_FragColor = vec4(textureColor.rgb, textureColor.a);
+      // gl_FragColor = vec4(vTextureCoord, 0, 1);
     }
 `;
 
@@ -129,9 +140,45 @@ function setPositionAttribute(gl, buffers, programInfo) {
   gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
 }
 
+//
+// Initialize a texture and load an image.
+// When the image finished loading copy it into the texture.
+//
+function loadTexture(gl, image) {
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+
+    // Because images have to be downloaded over the internet
+    // they might take a moment until they are ready.
+    // Until then put a single pixel in the texture so we can
+    // use it immediately. When the image has finished downloading
+    // we'll update the texture with the contents of the image.
+    const level = 0;
+    const internalFormat = gl.RGBA;
+    const srcFormat = gl.RGBA;
+    const srcType = gl.UNSIGNED_BYTE;
+
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(
+        gl.TEXTURE_2D,
+        level,
+        internalFormat,
+        srcFormat,
+        srcType,
+        image
+    );
+
+    gl.generateMipmap(gl.TEXTURE_2D);
+    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+    return texture;
+}
+
 ////////////////////////
 
-export function test(gl, sizes) {
+export function test(gl, sizes, image) {
     const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
     const programInfo = {
         program: shaderProgram,
@@ -141,23 +188,30 @@ export function test(gl, sizes) {
         uniformLocations: {
             projectionMatrix: gl.getUniformLocation(shaderProgram, "uProjectionMatrix"),
             modelViewMatrix: gl.getUniformLocation(shaderProgram, "uModelViewMatrix"),
+            uSampler: gl.getUniformLocation(shaderProgram, "uSampler"),
         },
     };
 
     const buffers = initBuffers(gl);
 
+    const texture = loadTexture(gl, image);
+
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); // sigh
+
     ///
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clearColor(0x87/255, 0xce/255, 0xeb/255, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
     // projection
     const projectionMatrix = mat4.create();
     mat4.ortho(projectionMatrix, 0, sizes.width, 0, sizes.height, -1, 1);
 
     // view
-    const scale = 100;
+    const scale = 2;
     const scalev = vec3.create();
-    vec3.set(scalev, scale, scale, 1);
+    vec3.set(scalev, image.width/scale, image.height/scale, 1);
 
     const modelViewMatrix = mat4.create();
     mat4.translate(
@@ -186,6 +240,12 @@ export function test(gl, sizes) {
         false,
         modelViewMatrix
     );
+
+    const unit = 0
+    gl.activeTexture(gl.TEXTURE0 + unit);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.uniform1i(programInfo.uniformLocations.uSampler, unit);
+
 
     {
         const offset = 0;
