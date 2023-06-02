@@ -289,6 +289,9 @@ const AFRAMES = 9;
 const STOP_AFRAME = 5;
 const CRASH_AFRAME = 8;
 
+const FREEZE_FRAMES = 5;
+const THAW_FRAMES = 300;
+
 ////////////////////////////////////////////////////////////
 class Bird {
     constructor(obj) {
@@ -297,6 +300,9 @@ class Bird {
         this.steps = FRAMES_PER*STOP_AFRAME;
         this.flapping = 0;
         this.v = new Vec2(conf.SPEED, 0);
+
+        this.hit = false;
+        this.freeze = 0.0;
 
         // Is this bullshit?
         for (let elem in obj) this[elem] = obj[elem];
@@ -369,6 +375,18 @@ class Bird {
         const hi = 50;
         this.wing_angle = deg(lo + (hi-lo)*(cnt/N));
 
+
+        //////
+        // Logic for freezing
+        if (this.hit) {
+            this.freeze = Math.min(1.0, this.freeze + 1.0/FREEZE_FRAMES);
+        } else {
+            this.freeze = Math.max(0.0, this.freeze - 1.0/THAW_FRAMES);
+        }
+
+        this.hit = false;
+
+        /////
         if (conf.DEBUG_MOVEMENT) {
             if (kd.A.isDown()) this.p.x -= 2;
             if (kd.D.isDown()) this.p.x += 2;
@@ -569,7 +587,6 @@ class Cloud extends SimpleSprite {
                 height: box.height / scale,
             };
         });
-
     }
 
     hits(birb) {
@@ -604,6 +621,9 @@ class Cloud extends SimpleSprite {
             if (this.hit == HIT_FRAMES) {
                 game.score--;
                 game.penalized = true;
+            }
+            if (this.hit >= HIT_FRAMES) {
+                game.birb.hit = true;
             }
         }
     }
