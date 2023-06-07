@@ -448,6 +448,7 @@ class Bird {
         ctx.save();
         ctx.translate(...toScreen(this.p));
         ctx.rotate(this.flightAngle());
+        ctx.freezeEffect = this.freeze;
         drawImage(
             ctx,
             sprite,

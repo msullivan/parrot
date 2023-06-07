@@ -167,9 +167,16 @@ const fsSource = `
     varying highp vec2 vTextureCoord;
     uniform sampler2D uSampler;
     uniform float alpha;
+    uniform float freezeEffect;
+
     void main() {
       vec4 textureColor = texture2D(uSampler, vTextureCoord);
       gl_FragColor = vec4(textureColor.rgb, alpha*textureColor.a);
+
+      if (freezeEffect > 0.0 && textureColor.g > 0.8) {
+        gl_FragColor = mix(
+            gl_FragColor, vec4(165.0/255.,197./255.,217./255., 1.0), freezeEffect);
+        }
     }
 `;
 
@@ -194,6 +201,7 @@ class CustomCanvas {
                 modelViewMatrix: gl.getUniformLocation(shaderProgram, "uModelViewMatrix"),
                 uSampler: gl.getUniformLocation(shaderProgram, "uSampler"),
                 alpha: gl.getUniformLocation(shaderProgram, "alpha"),
+                freeze: gl.getUniformLocation(shaderProgram, "freezeEffect"),
             },
         };
 
@@ -203,6 +211,7 @@ class CustomCanvas {
         gl.useProgram(this.programInfo.program);
         this.setProjection(sizes.width, sizes.height);
         this.globalAlpha = 1.0;
+        this.freezeEffect = 0.0
     }
 
     setProjection(width, height) {
@@ -230,6 +239,10 @@ class CustomCanvas {
             this.programInfo.uniformLocations.alpha,
             this.globalAlpha,
         );
+        gl.uniform1f(
+            this.programInfo.uniformLocations.freeze,
+            this.freezeEffect,
+        );
         gl.uniformMatrix4fv(
             this.programInfo.uniformLocations.modelViewMatrix,
             false,
@@ -244,7 +257,8 @@ class CustomCanvas {
     }
 
     save() {
-        this.stack.push({view: this.viewMatrix, alpha: this.globalAlpha});
+        this.stack.push({
+            view: this.viewMatrix, alpha: this.globalAlpha, freeze: this.freezeEffect});
 
         let n = mat4.create();
         mat4.copy(n, this.viewMatrix);
@@ -255,6 +269,7 @@ class CustomCanvas {
         let res = this.stack.pop();
         this.viewMatrix = res.view;
         this.globalAlpha = res.alpha;
+        this.freezeEffect = res.freeze;
     }
 
     drawImage(img, dx, dy, width, height) {
