@@ -52,7 +52,25 @@ function initShaderProgram(gl, vsSource, fsSource) {
         return null;
     }
 
-    return shaderProgram;
+    const nun = gl.getProgramParameter(shaderProgram, gl.ACTIVE_UNIFORMS);
+    let uniforms = {}
+    for (let i = 0; i < nun; i++) {
+        let uniform = gl.getActiveUniform(shaderProgram, i);
+        uniforms[uniform.name.substring(2)] = gl.getUniformLocation(
+            shaderProgram, uniform.name);
+        console.log(uniform);
+    }
+
+    const natt =  gl.getProgramParameter(shaderProgram, gl.ACTIVE_ATTRIBUTES);
+    let attribs = {}
+    for (let i = 0; i < natt; i++) {
+        let attrib = gl.getActiveAttrib(shaderProgram, i);
+        attrib[attrib.name.substring(2)] = gl.getAttribLocation(
+            shaderProgram, attrib.name);
+        console.log(attrib);
+    }
+
+    return { program: shaderProgram, uniforms: uniforms, attribs: attribs };
 }
 
 
@@ -98,14 +116,14 @@ function setPositionAttribute(gl, buffers, programInfo) {
     const offset = 0; // how many bytes inside the buffer to start from
     gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
     gl.vertexAttribPointer(
-        programInfo.attribLocations.vertexPosition,
+        programInfo.attribs.vertexPosition,
         numComponents,
         type,
         normalize,
         stride,
         offset
     );
-    gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
+    gl.enableVertexAttribArray(programInfo.attribs.vertexPosition);
 }
 
 //
@@ -186,22 +204,7 @@ class CustomCanvas {
         this.viewMatrix = mat4.create();
         this.stack = [];
 
-        ///
-
-        let shaderProgram = initShaderProgram(gl, vsSource, fsSource);
-        this.programInfo = {
-            program: shaderProgram,
-            attribLocations: {
-                vertexPosition: gl.getAttribLocation(shaderProgram, "a_vertexPosition"),
-            },
-            uniforms: {
-                projectionMatrix: gl.getUniformLocation(shaderProgram, "u_projectionMatrix"),
-                modelViewMatrix: gl.getUniformLocation(shaderProgram, "u_modelViewMatrix"),
-                sampler: gl.getUniformLocation(shaderProgram, "u_sampler"),
-                alpha: gl.getUniformLocation(shaderProgram, "u_alpha"),
-                freezeEffect: gl.getUniformLocation(shaderProgram, "u_freezeEffect"),
-            },
-        };
+        this.programInfo = initShaderProgram(gl, vsSource, fsSource);
 
         this.buffers = initBuffers(gl);
 
