@@ -83,7 +83,6 @@ function initShaderProgram(gl, vsSource, fsSource) {
         let uniform = gl.getActiveUniform(shaderProgram, i);
         uniforms[uniform.name.substring(2)] = gl.getUniformLocation(
             shaderProgram, uniform.name);
-        console.log(uniform);
     }
 
     const natt =  gl.getProgramParameter(shaderProgram, gl.ACTIVE_ATTRIBUTES);
@@ -92,7 +91,6 @@ function initShaderProgram(gl, vsSource, fsSource) {
         let attrib = gl.getActiveAttrib(shaderProgram, i);
         attrib[attrib.name.substring(2)] = gl.getAttribLocation(
             shaderProgram, attrib.name);
-        console.log(attrib);
     }
 
     return { program: shaderProgram, uniforms: uniforms, attribs: attribs };
