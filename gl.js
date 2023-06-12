@@ -149,33 +149,33 @@ function loadTexture(gl, image) {
 ////////////////////////
 
 const vsSource = `
-    attribute vec4 aVertexPosition;
-    uniform mat4 uModelViewMatrix;
-    uniform mat4 uProjectionMatrix;
+    attribute vec4 a_vertexPosition;
+    uniform mat4 u_modelViewMatrix;
+    uniform mat4 u_projectionMatrix;
 
-    varying highp vec2 vTextureCoord;
+    varying highp vec2 v_textureCoord;
 
     void main() {
-      vTextureCoord = aVertexPosition.xy;
-      gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+      v_textureCoord = a_vertexPosition.xy;
+      gl_Position = u_projectionMatrix * u_modelViewMatrix * a_vertexPosition;
     }
 `;
 
 const fsSource = `
     precision highp float;
 
-    varying highp vec2 vTextureCoord;
-    uniform sampler2D uSampler;
-    uniform float alpha;
-    uniform float freezeEffect;
+    varying highp vec2 v_textureCoord;
+    uniform sampler2D u_sampler;
+    uniform float u_alpha;
+    uniform float u_freezeEffect;
 
     void main() {
-      vec4 textureColor = texture2D(uSampler, vTextureCoord);
-      gl_FragColor = vec4(textureColor.rgb, alpha*textureColor.a);
+      vec4 textureColor = texture2D(u_sampler, v_textureCoord);
+      gl_FragColor = vec4(textureColor.rgb, u_alpha*textureColor.a);
 
-      if (freezeEffect > 0.0 && textureColor.g > 0.8) {
+      if (u_freezeEffect > 0.0 && textureColor.g > 0.8) {
         gl_FragColor = mix(
-            gl_FragColor, vec4(165.0/255.,197./255.,217./255., 1.0), freezeEffect);
+            gl_FragColor, vec4(165.0/255.,197./255.,217./255., 1.0), u_freezeEffect);
         }
     }
 `;
@@ -194,14 +194,14 @@ class CustomCanvas {
         this.programInfo = {
             program: shaderProgram,
             attribLocations: {
-                vertexPosition: gl.getAttribLocation(shaderProgram, "aVertexPosition"),
+                vertexPosition: gl.getAttribLocation(shaderProgram, "a_vertexPosition"),
             },
-            uniformLocations: {
-                projectionMatrix: gl.getUniformLocation(shaderProgram, "uProjectionMatrix"),
-                modelViewMatrix: gl.getUniformLocation(shaderProgram, "uModelViewMatrix"),
-                uSampler: gl.getUniformLocation(shaderProgram, "uSampler"),
-                alpha: gl.getUniformLocation(shaderProgram, "alpha"),
-                freeze: gl.getUniformLocation(shaderProgram, "freezeEffect"),
+            uniforms: {
+                projectionMatrix: gl.getUniformLocation(shaderProgram, "u_projectionMatrix"),
+                modelViewMatrix: gl.getUniformLocation(shaderProgram, "u_modelViewMatrix"),
+                sampler: gl.getUniformLocation(shaderProgram, "u_sampler"),
+                alpha: gl.getUniformLocation(shaderProgram, "u_alpha"),
+                freezeEffect: gl.getUniformLocation(shaderProgram, "u_freezeEffect"),
             },
         };
 
@@ -217,7 +217,7 @@ class CustomCanvas {
     setProjection(width, height) {
         mat4.ortho(this.projectionMatrix, 0, width, 0, height, -1, 1);
         this.gl.uniformMatrix4fv(
-            this.programInfo.uniformLocations.projectionMatrix,
+            this.programInfo.uniforms.projectionMatrix,
             false,
             this.projectionMatrix
         );
@@ -236,15 +236,15 @@ class CustomCanvas {
     _setUniforms() {
         const gl = this.gl;
         gl.uniform1f(
-            this.programInfo.uniformLocations.alpha,
+            this.programInfo.uniforms.alpha,
             this.globalAlpha,
         );
         gl.uniform1f(
-            this.programInfo.uniformLocations.freeze,
+            this.programInfo.uniforms.freezeEffect,
             this.freezeEffect,
         );
         gl.uniformMatrix4fv(
-            this.programInfo.uniformLocations.modelViewMatrix,
+            this.programInfo.uniforms.modelViewMatrix,
             false,
             this.viewMatrix,
         );
@@ -287,7 +287,7 @@ class CustomCanvas {
         const unit = 0
         gl.activeTexture(gl.TEXTURE0 + unit);
         gl.bindTexture(gl.TEXTURE_2D, img.texture);
-        gl.uniform1i(this.programInfo.uniformLocations.uSampler, unit);
+        gl.uniform1i(this.programInfo.uniforms.sampler, unit);
 
         {
             const offset = 0;
