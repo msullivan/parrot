@@ -815,9 +815,7 @@ function draw(now) {
 
     // Draw blue background
     ctx.save();
-    // ctx.fillStyle = "#87CEEB";
-    // ctx.fillRect(0, 0, canvas_width, canvas_height);
-    ctx.gl.clear(ctx.gl.COLOR_BUFFER_BIT);
+    ctx.clear("#87CEEB");
     ctx.restore();
 
     // Game state -- translated

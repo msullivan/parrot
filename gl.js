@@ -1,5 +1,30 @@
 // used a bunch from https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/
 
+export let parseColor = (() => {
+    // This is super cheesy. Parse colors by writing the color to a canvas and
+    // reading it back.
+    const canvas = document.createElement('canvas');
+    canvas.height = canvas.width = 1;
+    const ctx = canvas.getContext("2d", {willReadFrequently: true});
+    const cache = {};
+
+    function parse(s) {
+        if (cache[s]) {
+            return cache[s];
+        }
+
+        ctx.fillStyle = s;
+        ctx.rect(0, 0, 1, 1);
+        ctx.fill();
+
+        let res = ctx.getImageData(0, 0, 1, 1).data;
+        cache[s] = res;
+        return res;
+    }
+
+    return parse;
+})();
+
 ////////////////////////
 //
 // creates a shader of the given type, uploads the source and
@@ -298,6 +323,12 @@ class CustomCanvas {
 
         this.restore();
     }
+
+    clear(scolor) {
+        let color = parseColor(scolor);
+        this.gl.clearColor(color[0]/255, color[1]/255, color[2]/255, color[3]/255);
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+    }
 }
 
 
@@ -317,8 +348,6 @@ export function setupGL(canvas, sizes) {
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); // sigh
 
     ///
-    gl.clearColor(0x87/255, 0xce/255, 0xeb/255, 1.0); // XXX
-    gl.clear(gl.COLOR_BUFFER_BIT);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
