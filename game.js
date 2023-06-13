@@ -226,6 +226,38 @@ function processBoundingBoxes(img, slices) {
     return boxes;
 }
 
+class Loader {
+    constructor() {
+        this.pending = 0;
+        this.onload = null;
+    }
+
+    load(path) {
+        const img = new Image();
+        img.src = path;
+        const this_ = this;
+        this.pending++;
+        img.onload = () => {
+            this_.pending--;
+            if (this_.pending == 0 && this_.onload) {
+                this_.onload();
+            }
+        };
+        return img;
+    }
+
+}
+const loader = new Loader();
+
+function loadGroup(name, lo, hi) {
+    let sprites = [];
+    for (let i = lo; i <= hi; i++) {
+        sprites.push(loader.load("images/" + name + "/" + i + ".png"));
+    }
+    return sprites;
+}
+
+
 /////////////// Globals?
 
 /* "Most of what I want from jquery" */
@@ -241,42 +273,20 @@ const canvas_width = canvas.width;
 const canvas_height = canvas.height;
 const ctx = setupGL(canvas, {height: canvas_height, width: canvas_width});
 
-let groundSprites = [];
+let groundSprites = loadGroup("bg", 1, 3);
 let groundOffsets = [-5, -30, -5];
-for (let i = 0; i < 3; i++) {
-    groundSprites.push($("plant" + (i+1)));
+for (let i = 0; i < groundSprites.length; i++) {
     groundSprites[i].offset = groundOffsets[i];
 }
 
-let birdSprites = [];
-for (let i = 1; i <= 9; i++) {
-    birdSprites.push($("pf" + i));
-}
-let cloudSprites = [];
-for (let i = 1; i <= 5; i++) {
-    cloudSprites.push($("cloud" + i));
-}
-let noteSprites = [];
-for (let i = 1; i <= 3; i++) {
-    noteSprites.push($("note" + i));
-}
-let hillSprites = [];
-for (let i = 1; i <= 4; i++) {
-    hillSprites.push($("hill" + i));
-}
-let mtnSprites = [];
-for (let i = 1; i <= 3; i++) {
-    mtnSprites.push($("mtn" + i));
-}
-let redFont = [];
-for (let i = 0; i <= 10; i++) {
-    redFont.push($("font" + i));
-}
-let orangeFont = [];
-for (let i = 11; i <= 21; i++) {
-    orangeFont.push($("font" + i));
-}
-let introSprite = $("intro");
+let birdSprites = loadGroup("pf", 1, 9);
+let cloudSprites = loadGroup("cloud", 1, 5);
+let noteSprites = loadGroup("note", 1, 3);
+let hillSprites = loadGroup("hill", 1, 4);
+let mtnSprites = loadGroup("mtn", 1, 3);
+let redFont = loadGroup("font", 0, 10);
+let orangeFont = loadGroup("font", 11, 21);
+let introSprite = loader.load("images/intro.png");
 
 /////////////////////////////////////////////
 
@@ -940,9 +950,9 @@ function setupDpr(canvas, ctx) {
     canvas.style.height = height + 'px';
 }
 
+const flyImg = loader.load("images/fly.png");
 function setupButtons() {
     let fly = $("fly_button");
-    let flyImg = $("fly");
     let fscale = 2;
     let fwidth = flyImg.width / fscale;
     const flyctx = fly.getContext("2d");
@@ -1008,4 +1018,4 @@ function init() {
         tick, draw, () => { return conf.FPS });
 }
 
-window.onload = init;
+loader.onload = init;
