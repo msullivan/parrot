@@ -25,6 +25,11 @@ export let parseColor = (() => {
     return parse;
 })();
 
+export function parseColorFloat(s) {
+    let color = parseColor(s);
+    return [color[0]/255, color[1]/255, color[2]/255, color[3]/255]
+}
+
 ////////////////////////
 //
 // creates a shader of the given type, uploads the source and
@@ -185,12 +190,17 @@ const fsSource = `
 
     varying highp vec2 v_textureCoord;
     uniform sampler2D u_sampler;
+    uniform vec4 u_color;
     uniform float u_alpha;
     uniform float u_freezeEffect;
+    uniform float u_useTex;  // ???
 
     void main() {
       vec4 textureColor = texture2D(u_sampler, v_textureCoord);
-      gl_FragColor = vec4(textureColor.rgb, u_alpha*textureColor.a);
+      gl_FragColor = u_color;
+      if (u_useTex != 0.0) {
+        gl_FragColor = vec4(textureColor.rgb, u_alpha*textureColor.a);
+      };
 
       if (u_freezeEffect > 0.0 && textureColor.g > 0.8) {
         gl_FragColor = mix(
@@ -216,6 +226,10 @@ class CustomCanvas {
         this.setProjection(sizes.width, sizes.height);
         this.globalAlpha = 1.0;
         this.freezeEffect = 0.0
+
+        this.path = [];
+
+        this.strokeStyle = "#ffffff";
     }
 
     setProjection(width, height) {
@@ -262,7 +276,9 @@ class CustomCanvas {
 
     save() {
         this.stack.push({
-            view: this.viewMatrix, alpha: this.globalAlpha, freeze: this.freezeEffect});
+            view: this.viewMatrix, alpha: this.globalAlpha, freeze: this.freezeEffect,
+            strokeStyle: this.strokeStyle,
+        });
 
         let n = mat4.create();
         mat4.copy(n, this.viewMatrix);
@@ -274,7 +290,65 @@ class CustomCanvas {
         this.viewMatrix = res.view;
         this.globalAlpha = res.alpha;
         this.freezeEffect = res.freeze;
+        this.strokeStyle = res.strokeStyle;
     }
+
+    moveTo(x, y) {
+        this.path.push([x, y]);
+    }
+    lineTo(x, y) {
+        const last = this.path[this.path.length - 1];
+        last.push(x);
+        last.push(y);
+    }
+
+    beginPath() {
+        this.path = [];
+    }
+
+    ellipse() {}
+    fill() {}
+
+    rect(x, y, w, h) {
+        this.moveTo(x  , y);
+        this.lineTo(x  , y+h);
+        this.lineTo(x+w, y+h);
+        this.lineTo(x+w, y);
+        this.lineTo(x  , y);
+    }
+
+
+    stroke() {
+        let vpath = []
+        this.path.forEach((spath) => {
+            for (let i = 0; i + 2 < spath.length; i += 2) {
+                vpath.push(spath[i + 0]);
+                vpath.push(spath[i + 1]);
+                vpath.push(spath[i + 2]);
+                vpath.push(spath[i + 3]);
+            }
+        });
+        // this.path = [];
+        const gl = this.gl;
+        const buf = makeBuffer(gl, vpath);
+        gl.lineWidth(2);
+
+        this._setUniforms();
+
+        gl.uniform1f(this.programInfo.uniforms.useTex, 0.0);
+        gl.uniform4fv(this.programInfo.uniforms.color, parseColor(this.strokeStyle));
+
+        {
+            const offset = 0;
+            const vertexCount = vpath.length / 2;
+            setPositionAttribute(
+                gl, buf, this.programInfo.attribs.vertexPosition);
+            gl.drawArrays(gl.LINES, offset, vertexCount);
+        }
+
+
+    }
+
 
     drawImage(img, dx, dy, width, height) {
         const gl = this.gl;
@@ -292,6 +366,8 @@ class CustomCanvas {
         gl.activeTexture(gl.TEXTURE0 + unit);
         gl.bindTexture(gl.TEXTURE_2D, img.texture);
         gl.uniform1i(this.programInfo.uniforms.sampler, unit);
+        gl.uniform1f(this.programInfo.uniforms.useTex, 1.0);
+        gl.uniform4fv(this.programInfo.uniforms.color, parseColorFloat("#ffffff"));
 
         {
             const offset = 0;

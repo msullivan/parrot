@@ -435,7 +435,7 @@ class Bird {
         ctx.lineTo(-Math.cos(wangle)*len, Math.sin(wangle)*len);
         ctx.stroke();
         ctx.beginPath();
-        ctx.lineTo(0, 0);
+        ctx.moveTo(0, 0);
         ctx.lineTo(...toScreen(this.rawBeakOffset()));
         ctx.stroke();
         ctx.restore();
