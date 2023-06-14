@@ -459,8 +459,7 @@ class Bird {
         ctx.translate(...toScreen(this.p));
         ctx.rotate(this.flightAngle());
         ctx.freezeEffect = this.freeze;
-        drawImage(
-            ctx,
+        ctx.drawImage(
             sprite,
             -PARROT_CENTER.x, -PARROT_CENTER.y,
             sprite.width/scale, sprite.height/scale,
@@ -526,7 +525,7 @@ class SimpleSprite {
         if (this.globalAlpha !== undefined) {
             ctx.globalAlpha = this.globalAlpha;
         }
-        drawImage(ctx,
+        ctx.drawImage(
             this.sprite, ...toScreen(this.offs),
             this.width, this.height);
 
@@ -824,28 +823,18 @@ function draw(now) {
     trackFps(now);
 
     // Draw blue background
-    ctx.save();
     ctx.clear("#87CEEB");
-    ctx.restore();
 
     // Game state -- translated
     ctx.save();
     ctx.translate(0, GROUND_HEIGHT);
-    // ctx.scale(1, -1);
 
     // Sort by layers
     game.noobs.sort((n1, n2) => {
         return ((n1.layer ?? 0) - (n2.layer ?? 0));
     });
 
-    // ctx.translate(canvas_width/4 - game.birb.p.x, 0);
     game.noobs.forEach((noob) => {
-        // OK yeah this sucks.
-        // if (noob == game.birb) {
-        //     let data = ctx.getImageData(noob.x|0, noob.y|0, 1, 1).data;
-        //     console.log("!", data[0], data[1], data[2]);
-        // }
-
         ctx.save();
         ctx.translate(canvas_width/4 - game.birb.p.x/noob.zscale, 0);
         noob.render(ctx);

@@ -345,10 +345,7 @@ class CustomCanvas {
                 gl, buf, this.programInfo.attribs.vertexPosition);
             gl.drawArrays(gl.LINES, offset, vertexCount);
         }
-
-
     }
-
 
     drawImage(img, dx, dy, width, height) {
         const gl = this.gl;
