@@ -385,6 +385,7 @@ class CustomCanvas {
 }
 
 
+
 export function setupGL(canvas, sizes) {
     const gl = canvas.getContext("webgl2",{
         alpha: false,
@@ -405,4 +406,56 @@ export function setupGL(canvas, sizes) {
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
     return ctx;
+}
+
+//////
+function makeCanvasProxy(ctx, sizes) {
+    const ops = {
+        drawImage: (img, dx, dy, width, height) => {
+            ctx.save();
+            ctx.translate(dx, dy+height/2);
+            ctx.scale(1, -1);
+            ctx.drawImage(img, 0, -height/2, width, height);
+            ctx.restore();
+        },
+        clear: (color) => {
+            ctx.save();
+            ctx.fillStyle = color;
+            ctx.rect(0, 0, sizes.width, sizes.height);
+            ctx.fill();
+            ctx.restore();
+        },
+        setProjection(width, height) {
+            ctx.scale(1, -1);
+            ctx.translate(0, -height);
+        },
+    };
+
+    const flippedProxy = {
+        get(target, prop, receiver) {
+            if (ops[prop]) return ops[prop];
+            const res = target[prop];
+            if (res instanceof Function) {
+                return (...args) => {
+                    return Reflect.apply(res, ctx, args);
+                };
+            } else {
+                return res;
+            }
+        },
+        set(obj, prop, value) {
+            if (obj[prop] !== undefined) {
+                return Reflect.set(obj, prop, value);
+            }
+            return true;
+        }
+    };
+    const p = new Proxy(ctx, flippedProxy);
+    p.setProjection(sizes.width, sizes.height);
+    return p;
+}
+
+export function setupFlippedCanvas(canvas, sizes) {
+    const ctx = canvas.getContext("2d");
+    return makeCanvasProxy(ctx, sizes);
 }

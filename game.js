@@ -1,4 +1,4 @@
-import { setupGL } from "./gl.js";
+import { setupGL, setupFlippedCanvas } from "./gl.js";
 
 //////////// Content?
 //////////// Constants and shit
@@ -932,6 +932,8 @@ function setupDpr(canvas, ctx) {
     canvas.height = height * dpr;
     if (ctx.gl) {
         ctx.gl.viewport(0, 0, canvas.width, canvas.height);
+    }
+    if (ctx.setProjection) {
         ctx.setProjection(canvas.width, canvas.height);
     }
     ctx.scale(dpr, dpr);
