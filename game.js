@@ -271,7 +271,8 @@ let game = {
 const canvas = $("game");
 const canvas_width = canvas.width;
 const canvas_height = canvas.height;
-const ctx = setupGL(canvas, {height: canvas_height, width: canvas_width});
+// XXX: Should this *not* be a global?
+let ctx = null;
 
 let groundSprites = loadGroup("bg", 1, 3);
 let groundOffsets = [-5, -30, -5];
@@ -930,6 +931,7 @@ function setupDpr(canvas, ctx) {
     let height = canvas.height;
     canvas.width = width * dpr;
     canvas.height = height * dpr;
+    ctx.dpr = dpr;
     if (ctx.gl) {
         ctx.gl.viewport(0, 0, canvas.width, canvas.height);
     }
@@ -967,9 +969,17 @@ function setupButtons() {
 
 function init() {
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('debug')) {
+    if (urlParams.get('debug') == '1') {
         $('debug_config').hidden = '';
     }
+    if (urlParams.get('canvas') == '1') {
+        ctx = setupFlippedCanvas(
+            canvas, {height: canvas_height, width: canvas_width});
+    } else {
+        ctx = setupGL(canvas, {height: canvas_height, width: canvas_width});
+    }
+
+
 
     $("fps").value = DEFAULT_FPS;
     $("speed").value = SPEED;

@@ -226,10 +226,14 @@ class CustomCanvas {
         this.setProjection(sizes.width, sizes.height);
         this.globalAlpha = 1.0;
         this.freezeEffect = 0.0
+        this.lineWidth = 1;
+        this.strokeStyle = "#ffffff";
+        this.fillStyle = "#ffffff";
 
+
+        this.dpr = 1;
         this.path = [];
 
-        this.strokeStyle = "#ffffff";
     }
 
     setProjection(width, height) {
@@ -277,7 +281,8 @@ class CustomCanvas {
     save() {
         this.stack.push({
             view: this.viewMatrix, alpha: this.globalAlpha, freeze: this.freezeEffect,
-            strokeStyle: this.strokeStyle,
+            strokeStyle: this.strokeStyle, fillStyle: this.fillStyle,
+            lineWidth: this.lineWidth,
         });
 
         let n = mat4.create();
@@ -291,6 +296,8 @@ class CustomCanvas {
         this.globalAlpha = res.alpha;
         this.freezeEffect = res.freeze;
         this.strokeStyle = res.strokeStyle;
+        this.fillStyle = res.fillStyle;
+        this.lineWidth = res.lineWidth;
     }
 
     moveTo(x, y) {
@@ -331,7 +338,10 @@ class CustomCanvas {
         // this.path = [];
         const gl = this.gl;
         const buf = makeBuffer(gl, vpath);
-        gl.lineWidth(2);
+        // XXX: This doesn't really work in general (we should draw
+        // filled quads) but it works on my dev machine for up to 4, which
+        // is all *I* needed for now...
+        gl.lineWidth(this.dpr * this.lineWidth);
 
         this._setUniforms();
 
