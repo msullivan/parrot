@@ -135,16 +135,6 @@ function dot(ctx, color, pos, radius) {
     ctx.restore();
 }
 
-// drawImage on mirrored contexts
-function drawImage(ctx, img, dx, dy, width, height) {
-    ctx.drawImage(img, dx, dy, width, height);
-    // ctx.save();
-    // ctx.translate(dx, dy+height/2);
-    // ctx.scale(1, -1);
-    // ctx.drawImage(img, 0, -height/2, width, height);
-    // ctx.restore();
-}
-
 function drawText(string, font, pos) {
     let tgtHeight = 48;
     let refHeight = font[0].height;
