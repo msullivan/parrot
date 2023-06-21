@@ -222,6 +222,7 @@ class CustomCanvas {
         this.gl = gl;
         this.projectionMatrix = mat4.create();
 
+        this.idMatrix = mat4.create();
         this.viewMatrix = mat4.create();
         this.stack = [];
 
@@ -306,13 +307,19 @@ class CustomCanvas {
         this.lineWidth = res.lineWidth;
     }
 
+    _transformedPoint(x, y) {
+        let v = vec3.create();
+        vec3.set(v, x, y, 0);
+        vec3.transformMat4(v, v, this.viewMatrix);
+        return v;
+    }
+
     moveTo(x, y) {
-        this.path.push([x, y]);
+        this.path.push([this._transformedPoint(x, y)]);
     }
     lineTo(x, y) {
         const last = this.path[this.path.length - 1];
-        last.push(x);
-        last.push(y);
+        last.push(this._transformedPoint(x, y));
     }
 
     beginPath() {
@@ -367,7 +374,7 @@ class CustomCanvas {
             return this._fillEllipse();
         }
 
-        throw new Error("fill not really implemented");
+        // throw new Error("fill not really implemented");
     }
 
     rect(x, y, w, h) {
@@ -382,11 +389,11 @@ class CustomCanvas {
     stroke() {
         let vpath = []
         this.path.forEach((spath) => {
-            for (let i = 0; i + 2 < spath.length; i += 2) {
-                vpath.push(spath[i + 0]);
-                vpath.push(spath[i + 1]);
-                vpath.push(spath[i + 2]);
-                vpath.push(spath[i + 3]);
+            for (let i = 0; i + 1 < spath.length; i++) {
+                vpath.push(spath[i + 0][0]);
+                vpath.push(spath[i + 0][1]);
+                vpath.push(spath[i + 1][0]);
+                vpath.push(spath[i + 1][1]);
             }
         });
         // this.path = [];
@@ -403,6 +410,11 @@ class CustomCanvas {
         gl.uniform4fv(
             this.programInfo.uniforms.color,
             parseColorFloat(this.strokeStyle));
+        gl.uniformMatrix4fv(
+            this.programInfo.uniforms.modelViewMatrix,
+            false,
+            this.idMatrix,
+        );
 
         {
             const offset = 0;
