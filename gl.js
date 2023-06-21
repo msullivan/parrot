@@ -368,13 +368,62 @@ class CustomCanvas {
 
     }
 
-    fill() {
-        // XXX: other stuff
+    fill(rule) {
         if (this.curEllipse) {
-            return this._fillEllipse();
+            return this._fillEllipse(rule);
         }
 
-        // throw new Error("fill not really implemented");
+        rule = rule ?? "nonzero";
+
+        let vpath = []
+        this.path.forEach((spath) => {
+            for (let i = 0; i + 1 < spath.length; i++) {
+                vpath.push(spath[i + 0][0]);
+                vpath.push(spath[i + 0][1]);
+                vpath.push(spath[i + 1][0]);
+                vpath.push(spath[i + 1][1]);
+            }
+        });
+        const gl = this.gl;
+        const buf = makeBuffer(gl, vpath);
+
+        this._setUniforms();
+        gl.uniform1f(this.programInfo.uniforms.useTex, 0.0);
+        gl.uniform4fv(
+            this.programInfo.uniforms.color,
+            parseColorFloat(this.fillStyle));
+        gl.uniformMatrix4fv(
+            this.programInfo.uniforms.modelViewMatrix,
+            false,
+            this.idMatrix,
+        );
+
+        // Draw it with the stencil on
+        gl.enable(gl.STENCIL_TEST);
+        gl.stencilFunc(gl.NEVER, 0, 0xff);
+        if (rule == "evenodd") {
+            gl.stencilOp(gl.INVERT, gl.INVERT, gl.INVERT);
+        } else {
+            gl.stencilOpSeparate(
+                gl.FRONT, gl.INCR_WRAP, gl.INCR_WRAP, gl.INCR_WRAP);
+            gl.stencilOpSeparate(
+                gl.BACK, gl.DECR_WRAP, gl.DECR_WRAP, gl.DECR_WRAP);
+        }
+
+        const offset = 0;
+        const vertexCount = vpath.length / 2;
+        setPositionAttribute(
+            gl, buf, this.programInfo.attribs.vertexPosition);
+        gl.drawArrays(gl.TRIANGLE_FAN, offset, vertexCount);
+
+        // Redraw everything, with a stencil test
+        // Would it be better to draw a new shape covering everything
+        // without overlaps? Probably depends.
+        gl.stencilFunc(gl.NOTEQUAL, 0, 0xff);
+        gl.stencilOp(gl.ZERO, gl.ZERO, gl.ZERO);
+        gl.drawArrays(gl.TRIANGLE_FAN, offset, vertexCount);
+
+        gl.disable(gl.STENCIL_TEST);
     }
 
     rect(x, y, w, h) {
@@ -384,7 +433,6 @@ class CustomCanvas {
         this.lineTo(x+w, y);
         this.lineTo(x  , y);
     }
-
 
     stroke() {
         let vpath = []
@@ -488,7 +536,8 @@ class CustomCanvas {
 export function setupGL(canvas, sizes) {
     const gl = canvas.getContext("webgl2",{
         alpha: false,
-        premultipliedAlpha: false
+        premultipliedAlpha: false,
+        stencil: true,
     });
     if (gl === null) {
         alert(

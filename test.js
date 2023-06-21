@@ -123,16 +123,17 @@ function trackFps(now) {
     }
 }
 
-function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius){
+function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius, rot){
     // adapated from
     // https://stackoverflow.com/questions/25837158/how-to-draw-a-star-by-using-canvas-html5
+    rot = rot ?? 1;
     ctx.save();
     ctx.translate(cx, cy);
     ctx.moveTo(0, 0-outerRadius);
     for (var i = 0; i < spikes; i++) {
-        ctx.rotate(Math.PI / spikes);
+        ctx.rotate(rot * Math.PI / spikes);
         ctx.lineTo(0, 0 - innerRadius);
-        ctx.rotate(Math.PI / spikes);
+        ctx.rotate(rot * Math.PI / spikes);
         ctx.lineTo(0, 0 - outerRadius);
     }
     ctx.restore();
@@ -141,14 +142,30 @@ function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius){
 function draw(ctx, now) {
     ctx.clear("#ffffff");
 
+    ctx.save();
+
     let x = canvas_width/2;
     let y = canvas_height/2;
 
+    ctx.translate(x, y);
+    // ctx.rotate(-now / 1000 / 5 * Math.PI * 2);
+
     ctx.beginPath();
     ctx.fillStyle='skyblue';
-    drawStar(ctx, x, y, 5, 60, 30);
-    ctx.fill();
+    ctx.save();
+    ctx.rotate(-now / 1000 / 20 * Math.PI * 2);
+    drawStar(ctx, 0, 0, 5, 100, 50);
+    ctx.restore();
+    // drawStar(ctx, x, y, 5, 50, 25);
+
+    ctx.rotate(now / 1000 / 16 * Math.PI * 2);
+    drawStar(ctx, 0, 0, 5, 60, 30, -1);
+
+    ctx.fill("evenodd");
+    // ctx.fill();
     ctx.stroke();
+
+    ctx.restore();
 }
 
 function now() { return performance.now(); }
