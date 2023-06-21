@@ -515,10 +515,6 @@ class SimpleSprite {
         ctx.save();
         ctx.translate(...toScreen(this.p));
 
-        if (this.active && conf.DEBUG_DOTS) {
-            this.renderDebug();
-        }
-
         if (this.hflip) {
             ctx.translate(this.width, 0);
             ctx.scale(-1, 1);
@@ -536,6 +532,9 @@ class SimpleSprite {
             ctx.beginPath();
             ctx.rect(this.offs.x, this.offs.y, this.width, this.height);
             ctx.stroke();
+        }
+        if (this.active && conf.DEBUG_DOTS) {
+            this.renderDebug();
         }
 
         ctx.restore();
@@ -661,7 +660,8 @@ function makeCloud() {
         ),
         scale: 5,
         sprite: pickRandom(cloudSprites),
-        layer: 0,
+        layer: 1.2,
+        globalAlpha: 0.5,
         // center: true,
         zscale: CLOUD_ZSCALE,
         // hflip: randBool(),
@@ -680,8 +680,8 @@ function makeCloud() {
 
     game.nextCloud += getRandom(0.3, 0.6)*canvas_width;
     game.noobs.push(c);
-    params.globalAlpha = 0.5;
-    params.layer = 1.2;
+    params.globalAlpha = 1.0;
+    params.layer = 0;
     params.boxes = params.sprite.boxes;
     game.noobs.push(new Cloud(params));
 
