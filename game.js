@@ -856,6 +856,10 @@ function draw(now) {
     // Draw score
     let font = game.penalized ? redFont : orangeFont;
     drawText(game.score.toString(), font, new Vec2(20, canvas_height-70));
+
+    // let y = canvas_height/2;
+    // let x = canvas_width/2;
+    // ctx.drawTriangle(x, y, x+50, y, x, y+50);
 }
 
 let touched = false;

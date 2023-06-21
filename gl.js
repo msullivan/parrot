@@ -235,13 +235,11 @@ class CustomCanvas {
         this.globalAlpha = 1.0;
         this.freezeEffect = 0.0
         this.lineWidth = 1;
-        this.strokeStyle = "#ffffff";
-        this.fillStyle = "#ffffff";
-
+        this.strokeStyle = "#000000";
+        this.fillStyle = "#000000";
 
         this.dpr = 1;
         this.path = [];
-
     }
 
     setProjection(width, height) {
@@ -323,10 +321,9 @@ class CustomCanvas {
 
     ellipse() {
         this.curEllipse = arguments;
-
     }
-    fill() {
-        // XXX: other stuff
+
+    _fillEllipse() {
         const gl = this.gl;
 
         let [x, y, radiusX, radiusY, rotation, startAngle, endAngle] =
@@ -361,6 +358,16 @@ class CustomCanvas {
         this.restore();
 
         this.curEllipse = null;
+
+    }
+
+    fill() {
+        // XXX: other stuff
+        if (this.curEllipse) {
+            return this._fillEllipse();
+        }
+
+        throw new Error("fill not really implemented");
     }
 
     rect(x, y, w, h) {
@@ -403,6 +410,27 @@ class CustomCanvas {
             setPositionAttribute(
                 gl, buf, this.programInfo.attribs.vertexPosition);
             gl.drawArrays(gl.LINES, offset, vertexCount);
+        }
+    }
+
+    drawTriangle(x0, y0, x1, y1, x2, y2) {
+        const gl = this.gl;
+
+        let vpath = [x0, y0, x1, y1, x2, y2];
+        const buf = makeBuffer(gl, vpath);
+
+        this._setUniforms();
+        gl.uniform1f(this.programInfo.uniforms.useTex, 0.0);
+        gl.uniform4fv(
+            this.programInfo.uniforms.color,
+            parseColorFloat(this.fillStyle));
+
+        {
+            const offset = 0;
+            const vertexCount = 3;
+            setPositionAttribute(
+                gl, buf, this.programInfo.attribs.vertexPosition);
+            gl.drawArrays(gl.TRIANGLES, offset, vertexCount);
         }
     }
 
@@ -488,6 +516,13 @@ function makeCanvasProxy(ctx, sizes) {
             ctx.scale(1, -1);
             ctx.translate(0, -height);
         },
+        drawTriangle(x0, y0, x1, y1, x2, y2) {
+            ctx.beginPath();
+            ctx.moveTo(x0, y0);
+            ctx.lineTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.fill();
+        }
     };
 
     const flippedProxy = {
