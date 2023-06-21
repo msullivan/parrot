@@ -979,8 +979,6 @@ function init() {
         ctx = setupGL(canvas, {height: canvas_height, width: canvas_width});
     }
 
-
-
     $("fps").value = DEFAULT_FPS;
     $("speed").value = SPEED;
     cloudSprites.forEach((sprite) => {

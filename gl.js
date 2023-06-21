@@ -194,18 +194,26 @@ const fsSource = `
     uniform float u_alpha;
     uniform float u_freezeEffect;
     uniform float u_useTex;  // ???
+    uniform float u_circleClip;  // ???
 
     void main() {
       vec4 textureColor = texture2D(u_sampler, v_textureCoord);
       gl_FragColor = u_color;
+      if (u_circleClip == 1.0) {
+          if (distance(v_textureCoord, vec2(0.5, 0.5)) > 0.5) {
+              discard;
+          }
+      }
       if (u_useTex != 0.0) {
-        gl_FragColor = vec4(textureColor.rgb, u_alpha*textureColor.a);
+          gl_FragColor = vec4(textureColor.rgb, textureColor.a);
       };
 
       if (u_freezeEffect > 0.0 && textureColor.g > 0.8) {
         gl_FragColor = mix(
             gl_FragColor, vec4(165.0/255.,197./255.,217./255., 1.0), u_freezeEffect);
         }
+
+      gl_FragColor.a *= u_alpha;
     }
 `;
 
@@ -313,8 +321,47 @@ class CustomCanvas {
         this.path = [];
     }
 
-    ellipse() {}
-    fill() {}
+    ellipse() {
+        this.curEllipse = arguments;
+
+    }
+    fill() {
+        // XXX: other stuff
+        const gl = this.gl;
+
+        let [x, y, radiusX, radiusY, rotation, startAngle, endAngle] =
+            this.curEllipse;
+
+        if (!(startAngle == 0 && endAngle == 2*Math.PI)) {
+            throw new Error("can't actually do complex ellipses");
+        }
+
+        this.save();
+        this.translate(x, y);
+        this.rotate(rotation);
+        this.scale(2*radiusX, 2*radiusY);
+        this.translate(-0.5, -0.5);
+
+        this._setUniforms();
+
+        let color = parseColorFloat(this.fillStyle);
+        gl.uniform1f(this.programInfo.uniforms.useTex, 0.0);
+        gl.uniform1f(this.programInfo.uniforms.circleClip, 1.0);
+        gl.uniform4fv(this.programInfo.uniforms.color, color);
+
+        {
+            const offset = 0;
+            const vertexCount = 4;
+            setPositionAttribute(
+                gl, this.squareBuffer, this.programInfo.attribs.vertexPosition);
+            gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
+        }
+
+        gl.uniform1f(this.programInfo.uniforms.circleClip, 0.0);
+        this.restore();
+
+        this.curEllipse = null;
+    }
 
     rect(x, y, w, h) {
         this.moveTo(x  , y);
@@ -346,7 +393,9 @@ class CustomCanvas {
         this._setUniforms();
 
         gl.uniform1f(this.programInfo.uniforms.useTex, 0.0);
-        gl.uniform4fv(this.programInfo.uniforms.color, parseColor(this.strokeStyle));
+        gl.uniform4fv(
+            this.programInfo.uniforms.color,
+            parseColorFloat(this.strokeStyle));
 
         {
             const offset = 0;
