@@ -136,14 +136,13 @@ function dot(ctx, color, pos, radius) {
 }
 
 function arrow(ctx, color, pos, vec) {
-    vec = vec.scale(300);
     const mag = vec.mag();
     if (!mag) return;
 
     ctx.save();
     ctx.fillStyle = color;
     ctx.translate(...toScreen(pos));
-    ctx.rotate(-vec.angle() + Math.PI/2);
+    ctx.rotate(vec.angle() - Math.PI/2);
 
     // why draw something with 3 triangles when you could draw it with 8?
     const headSize = Math.min(30, .3*mag);
@@ -502,8 +501,10 @@ class Bird {
             dot(ctx, "blue", this.beakPos(), this.beakSize());
             dot(ctx, "blue", this.headPos(), this.headSize());
 
-            arrow(ctx, "orange", this.p, this.lift);
-            arrow(ctx, "orange", this.p, this.gravity);
+            const aScale = 200;
+            arrow(ctx, "orange", this.p, this.lift.scale(aScale));
+            arrow(ctx, "orange", this.p, this.gravity.scale(aScale));
+            arrow(ctx, "purple", this.p, this.v.scale(20));
 
             // ctx.save();
             // ctx.strokeStyle = "orange";
