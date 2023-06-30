@@ -74,8 +74,8 @@ class Vec2 {
             this.x*Math.sin(theta) + this.y*Math.cos(theta),
         );
     }
-
 }
+const ZERO_VEC = new Vec2(0, 0);
 
 const directions = {
     down:  new Vec2(0, -1),
@@ -131,6 +131,34 @@ function dot(ctx, color, pos, radius) {
     ctx.fillStyle = color;
     ctx.beginPath();
     ctx.ellipse(...toScreen(pos), radius, radius, 0, 0, 2*Math.PI);
+    ctx.fill();
+    ctx.restore();
+}
+
+function arrow(ctx, color, pos, vec) {
+    vec = vec.scale(300);
+    const mag = vec.mag();
+    if (!mag) return;
+
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.translate(...toScreen(pos));
+    ctx.rotate(-vec.angle() + Math.PI/2);
+
+    // why draw something with 3 triangles when you could draw it with 8?
+    const headSize = Math.min(30, .3*mag);
+    const lineHalf = 2;
+    const headHalf = 8;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(-lineHalf, 0);
+    ctx.lineTo(-lineHalf, mag-headSize); //
+    ctx.lineTo(-headHalf, mag-headSize); // XXX
+    ctx.lineTo(0, mag);
+    ctx.lineTo(headHalf, mag-headSize); // XXX
+    ctx.lineTo(lineHalf, mag-headSize); //
+    ctx.lineTo(lineHalf, 0);
+    ctx.lineTo(0, 0);
     ctx.fill();
     ctx.restore();
 }
@@ -305,6 +333,9 @@ class Bird {
         this.hit = false;
         this.freeze = 0.0;
 
+        this.gravity = directions.down.scale(G);
+        this.lift = ZERO_VEC;
+
         // Is this bullshit?
         for (let elem in obj) this[elem] = obj[elem];
     }
@@ -354,13 +385,16 @@ class Bird {
         if (this.flapping) {
             let amt = G;
             if (this.v.y < FLAP) amt += FLAP_A;
-            this.v = this.v.add(directions.up.scale(amt));
+            this.lift = directions.up.scale(amt);
             if (this.crashed && oldCrashed) {
                 this.p.y += 1;
             }
+        } else {
+            this.lift = ZERO_VEC;
         }
 
-        this.v = this.v.add(directions.down.scale(G));
+        this.v = this.v.add(this.gravity);
+        this.v = this.v.add(this.lift);
 
         if (this.flapping || this.getFrame() != STOP_AFRAME) {
             this.steps++;
@@ -467,6 +501,9 @@ class Bird {
             dot(ctx, "red", this.p);
             dot(ctx, "blue", this.beakPos(), this.beakSize());
             dot(ctx, "blue", this.headPos(), this.headSize());
+
+            arrow(ctx, "orange", this.p, this.lift);
+            arrow(ctx, "orange", this.p, this.gravity);
 
             // ctx.save();
             // ctx.strokeStyle = "orange";
