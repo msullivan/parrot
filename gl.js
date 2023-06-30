@@ -375,15 +375,18 @@ class CustomCanvas {
 
         rule = rule ?? "nonzero";
 
+        // Apparently TRIANGLE_FAN is slow on windows, so just do it.
         let vpath = []
-        this.path.forEach((spath) => {
-            for (let i = 0; i + 1 < spath.length; i++) {
+        for (const spath of this.path) {
+            for (let i = 1; i + 1 < spath.length; i++) {
+                vpath.push(spath[    0][0]);
+                vpath.push(spath[    0][1]);
                 vpath.push(spath[i + 0][0]);
                 vpath.push(spath[i + 0][1]);
                 vpath.push(spath[i + 1][0]);
                 vpath.push(spath[i + 1][1]);
             }
-        });
+        }
         const gl = this.gl;
         const buf = makeBuffer(gl, vpath);
 
@@ -414,14 +417,14 @@ class CustomCanvas {
         const vertexCount = vpath.length / 2;
         setPositionAttribute(
             gl, buf, this.programInfo.attribs.vertexPosition);
-        gl.drawArrays(gl.TRIANGLE_FAN, offset, vertexCount);
+        gl.drawArrays(gl.TRIANGLES, offset, vertexCount);
 
         // Redraw everything, with a stencil test
         // Would it be better to draw a new shape covering everything
         // without overlaps? Probably depends.
         gl.stencilFunc(gl.NOTEQUAL, 0, 0xff);
         gl.stencilOp(gl.ZERO, gl.ZERO, gl.ZERO);
-        gl.drawArrays(gl.TRIANGLE_FAN, offset, vertexCount);
+        gl.drawArrays(gl.TRIANGLES, offset, vertexCount);
 
         gl.disable(gl.STENCIL_TEST);
     }
