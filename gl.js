@@ -538,8 +538,8 @@ class CustomCanvas {
 
 export function setupGL(canvas, sizes) {
     const gl = canvas.getContext("webgl2",{
-        alpha: false,
-        premultipliedAlpha: false,
+        // HMMMMM
+        // premultipliedAlpha: false,
         stencil: true,
     });
     if (gl === null) {
@@ -554,7 +554,8 @@ export function setupGL(canvas, sizes) {
 
     ///
     gl.enable(gl.BLEND);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.blendFuncSeparate(
+        gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
     return ctx;
 }
