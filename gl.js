@@ -174,14 +174,14 @@ function loadTexture(gl, image) {
 
 const vsSource = `
     attribute vec4 a_vertexPosition;
-    uniform mat4 u_modelViewMatrix;
+    uniform mat4 u_worldMatrix;
     uniform mat4 u_projectionMatrix;
 
     varying highp vec2 v_textureCoord;
 
     void main() {
       v_textureCoord = a_vertexPosition.xy;
-      gl_Position = u_projectionMatrix * u_modelViewMatrix * a_vertexPosition;
+      gl_Position = u_projectionMatrix * u_worldMatrix * a_vertexPosition;
     }
 `;
 
@@ -223,7 +223,7 @@ class CustomCanvas {
         this.projectionMatrix = mat4.create();
 
         this.idMatrix = mat4.create();
-        this.viewMatrix = mat4.create();
+        this.worldMatrix = mat4.create();
         this.stack = [];
 
         this.programInfo = initShaderProgram(gl, vsSource, fsSource);
@@ -255,11 +255,11 @@ class CustomCanvas {
     scale(x, y) {
         const scalev = vec3.create();
         vec3.set(scalev, x, y, 1);
-        mat4.scale(this.viewMatrix, this.viewMatrix, scalev);
+        mat4.scale(this.worldMatrix, this.worldMatrix, scalev);
     }
 
     rotate(theta) {
-        mat4.rotateZ(this.viewMatrix, this.viewMatrix, theta);
+        mat4.rotateZ(this.worldMatrix, this.worldMatrix, theta);
     }
 
     _setUniforms() {
@@ -273,33 +273,33 @@ class CustomCanvas {
             this.freezeEffect,
         );
         gl.uniformMatrix4fv(
-            this.programInfo.uniforms.modelViewMatrix,
+            this.programInfo.uniforms.worldMatrix,
             false,
-            this.viewMatrix,
+            this.worldMatrix,
         );
     };
 
     translate(dx, dy) {
         const dv = vec3.create();
         vec3.set(dv, dx, dy, 0);
-        mat4.translate(this.viewMatrix, this.viewMatrix, dv);
+        mat4.translate(this.worldMatrix, this.worldMatrix, dv);
     }
 
     save() {
         this.stack.push({
-            view: this.viewMatrix, alpha: this.globalAlpha, freeze: this.freezeEffect,
+            world: this.worldMatrix, alpha: this.globalAlpha, freeze: this.freezeEffect,
             strokeStyle: this.strokeStyle, fillStyle: this.fillStyle,
             lineWidth: this.lineWidth,
         });
 
         let n = mat4.create();
-        mat4.copy(n, this.viewMatrix);
-        this.viewMatrix = n;
+        mat4.copy(n, this.worldMatrix);
+        this.worldMatrix = n;
     }
 
     restore() {
         let res = this.stack.pop();
-        this.viewMatrix = res.view;
+        this.worldMatrix = res.world;
         this.globalAlpha = res.alpha;
         this.freezeEffect = res.freeze;
         this.strokeStyle = res.strokeStyle;
@@ -310,7 +310,7 @@ class CustomCanvas {
     _transformedPoint(x, y) {
         let v = vec3.create();
         vec3.set(v, x, y, 0);
-        vec3.transformMat4(v, v, this.viewMatrix);
+        vec3.transformMat4(v, v, this.worldMatrix);
         return v;
     }
 
@@ -393,7 +393,7 @@ class CustomCanvas {
             this.programInfo.uniforms.color,
             parseColorFloat(this.fillStyle));
         gl.uniformMatrix4fv(
-            this.programInfo.uniforms.modelViewMatrix,
+            this.programInfo.uniforms.worldMatrix,
             false,
             this.idMatrix,
         );
@@ -459,7 +459,7 @@ class CustomCanvas {
             this.programInfo.uniforms.color,
             parseColorFloat(this.strokeStyle));
         gl.uniformMatrix4fv(
-            this.programInfo.uniforms.modelViewMatrix,
+            this.programInfo.uniforms.worldMatrix,
             false,
             this.idMatrix,
         );
