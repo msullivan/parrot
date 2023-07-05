@@ -172,12 +172,12 @@ function loadTexture(gl, image) {
 
 ////////////////////////
 
-const vsSource = `
-    attribute vec4 a_vertexPosition;
+const vsSource = `#version 300 es
+    in vec4 a_vertexPosition;
     uniform mat4 u_worldMatrix;
     uniform mat4 u_projectionMatrix;
 
-    varying highp vec2 v_textureCoord;
+    out highp vec2 v_textureCoord;
 
     void main() {
       v_textureCoord = a_vertexPosition.xy;
@@ -185,10 +185,10 @@ const vsSource = `
     }
 `;
 
-const fsSource = `
+const fsSource = `#version 300 es
     precision highp float;
 
-    varying highp vec2 v_textureCoord;
+    in highp vec2 v_textureCoord;
     uniform sampler2D u_sampler;
     uniform vec4 u_color;
     uniform float u_alpha;
@@ -196,24 +196,31 @@ const fsSource = `
     uniform float u_useTex;  // ???
     uniform float u_circleClip;  // ???
 
+    out vec4 outputColor;
+
     void main() {
-      vec4 textureColor = texture2D(u_sampler, v_textureCoord);
-      gl_FragColor = u_color;
       if (u_circleClip == 1.0) {
           if (distance(v_textureCoord, vec2(0.5, 0.5)) > 0.5) {
               discard;
           }
       }
+
+      outputColor = u_color;
+
+      vec4 textureColor = texture(u_sampler, v_textureCoord);
       if (u_useTex != 0.0) {
-          gl_FragColor = vec4(textureColor.rgb, textureColor.a);
+          outputColor *= textureColor;
       };
 
       if (u_freezeEffect > 0.0 && textureColor.g > 0.8) {
-        gl_FragColor = mix(
-            gl_FragColor, vec4(165.0/255.,197./255.,217./255., 1.0), u_freezeEffect);
-        }
+          outputColor = mix(
+              outputColor,
+              vec4(165.0/255.,197./255.,217./255., 1.0),
+              u_freezeEffect
+          );
+      }
 
-      gl_FragColor.a *= u_alpha;
+      outputColor.a *= u_alpha;
     }
 `;
 
