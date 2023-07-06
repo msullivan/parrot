@@ -282,7 +282,8 @@ let $ = (s) => { return document.getElementById(s); };
 
 // Lol.
 let game = {
-    birb: null, noobs: [], score: -0, penalized: false, started: false
+    birb: null, noobs: [], score: -0, penalized: false, started: false,
+    spawners: [],
 };
 
 const canvas = $("game");
@@ -679,11 +680,40 @@ class Cloud extends SimpleSprite {
     }
 };
 
+class ScrollSpawner {
+    constructor(func, start, scale) {
+        this.func = func;
+        this.next = start;
+        this.scale = scale ?? 1;
+    }
+
+    make() {
+        const [next, obj] = this.func(this.next);
+        this.next = next;
+        if (obj) {
+            game.noobs.push(obj);
+        }
+    }
+
+    makeUntil(target, scale) {
+        scale = scale ?? this.scale;
+        target /= scale;
+        while (this.next < target) {
+            this.make();
+        }
+    }
+};
+function makeSpawner(func, start, target, scale) {
+    const s = new ScrollSpawner(func, start, scale);
+    s.makeUntil(target);
+    return s;
+}
+
 const CLOUD_ZSCALE = 1;
-function makeCloud() {
+function makeCloud(next) {
     let params = {
         p: new Vec2(
-            game.nextCloud,
+            next,
             getRandom(0.2, 0.85)*canvas_height,
         ),
         scale: 5,
@@ -706,20 +736,18 @@ function makeCloud() {
         }
     }
 
-    game.nextCloud += getRandom(0.3, 0.6)*canvas_width;
+    next += getRandom(0.3, 0.6)*canvas_width;
     game.noobs.push(c);
     params.globalAlpha = 1.0;
     params.layer = 0;
     params.boxes = params.sprite.boxes;
-    game.noobs.push(new Cloud(params));
-
-    // console.log("new cloud at ", c.p.x);
+    return [next, new Cloud(params)];
 }
-function makeNote() {
+function makeNote(next) {
     let sprite = pickRandom(noteSprites);
     let c = new Note({
         p: new Vec2(
-            game.nextNote,
+            next,
             getRandom(GROUND_HEIGHT*0.5,
                       canvas_height-GROUND_HEIGHT-NOTE_SIZE),
         ),
@@ -737,21 +765,20 @@ function makeNote() {
             && circRectHits(c.p, c.nocollide, tgt.p,
                             tgt.width, tgt.height))
         {
-            game.nextNote += 0.1*canvas_width;
-            return;
+            next += 0.1*canvas_width;
+            return [next, null];
         }
     }
 
-    game.noobs.push(c);
-    game.nextNote += getRandom(0.2, 0.5)*canvas_width;
-    // console.log("new note at ", c.p.x);
+    next += getRandom(0.2, 0.5)*canvas_width;
+    return [next, c];
 }
 
-function makeGround() {
+function makeGround(next) {
     let sprite = pickRandom(groundSprites);
     let n = new SimpleSprite({
         p: new Vec2(
-            game.nextGround + sprite.offset,
+            next + sprite.offset,
             -GROUND_HEIGHT,
         ),
         sprite: sprite,
@@ -762,17 +789,18 @@ function makeGround() {
         scale: sprite.height/GROUND_HEIGHT_DRAWN,
         hflip: randBool(),
     });
-    game.nextGround += n.width*0.9 + sprite.offset;
+    next += n.width*0.9 + sprite.offset;
+    return [next, n];
     game.noobs.push(n);
 }
 
 const HILL_ZSCALE = 4;
-function makeHill() {
+function makeHill(next) {
     let sprite = pickRandom(hillSprites);
     let height = getRandom(0.23, 0.425);
     let scale = hillSprites[0].height/(height*canvas_height);
     let n = new SimpleSprite({
-        p: new Vec2(game.nextHill, -GROUND_HEIGHT),
+        p: new Vec2(next, -GROUND_HEIGHT),
         sprite: sprite,
         layer: -1 + getRandom(-0.1, 0.1), // XXX too far forward?
         zscale: HILL_ZSCALE,
@@ -780,25 +808,25 @@ function makeHill() {
         hflip: randBool(),
     });
 
-    game.nextHill += getRandom(0.35, 0.7)*n.width;
-    game.noobs.push(n);
+    next += getRandom(0.35, 0.7)*n.width;
+    return [next, n];
 }
 
 const MTN_ZSCALE = HILL_ZSCALE*HILL_ZSCALE;
-function makeMtn() {
+function makeMtn(next) {
     let sprite = pickRandom(mtnSprites);
     let height = 0.775 * getRandom(0.8, 1.2);
     let scale = mtnSprites[2].height/(height*canvas_height);
     let n = new SimpleSprite({
-        p: new Vec2(game.nextMtn, -GROUND_HEIGHT),
+        p: new Vec2(next, -GROUND_HEIGHT),
         sprite: sprite,
         layer: -2 + getRandom(-0.1, 0.1), // XXX too far forward?
         zscale: MTN_ZSCALE,
         scale: scale,
         globalAlpha: 0.5,
     });
-    game.nextMtn += getRandom(0.25, 0.65)*n.width;
-    game.noobs.push(n);
+    next += getRandom(0.25, 0.65)*n.width;
+    return [next, n];
 }
 
 //////////////////////////////////////////////
@@ -811,26 +839,14 @@ function gameSetup() {
     });
     game.noobs.push(game.birb);
 
-    game.nextNote = 500;
-    for (let i = 0; i < 5; i++) {
-        makeNote();
-    }
-    game.nextCloud = -canvas_width;
-    while (game.nextCloud < canvas_width*2) {
-        makeCloud();
-    }
-    game.nextGround = -canvas_width;
-    while (game.nextGround < canvas_width*2) {
-        makeGround();
-    }
-    game.nextHill = -canvas_width;
-    while (game.nextHill < canvas_width*2) {
-        makeHill();
-    }
-    game.nextMtn = -canvas_width;
-    while (game.nextMtn < canvas_width*2) {
-        makeMtn();
-    }
+    const lo = -canvas_width;
+    const hi = canvas_width*2;
+
+    game.spawners.push(makeSpawner(makeCloud, lo, hi));
+    game.spawners.push(makeSpawner(makeGround, lo, hi));
+    game.spawners.push(makeSpawner(makeHill, lo, hi, 2));
+    game.spawners.push(makeSpawner(makeMtn, lo, hi, 4));
+    game.spawners.push(makeSpawner(makeNote, 500, hi));
 }
 
 ///////////////////////////////////////////////
@@ -902,15 +918,9 @@ function tick(time) {
     if (flapping) game.started = true;
 
     let spawnPoint = game.birb.p.x + canvas_width;
-    let spawnPointC = game.birb.p.x/CLOUD_ZSCALE + canvas_width;
-    let spawnPointH = game.birb.p.x/HILL_ZSCALE + canvas_width;
-    let spawnPointM = game.birb.p.x/MTN_ZSCALE + canvas_width;
-
-    if (spawnPoint > game.nextGround) makeGround();
-    if (spawnPoint > game.nextNote) makeNote();
-    if (spawnPointC > game.nextCloud) makeCloud();
-    if (spawnPointH > game.nextHill) makeHill();
-    if (spawnPointM > game.nextMtn) makeMtn();
+    for (const spawner of game.spawners) {
+        spawner.makeUntil(spawnPoint);
+    }
 
     game.noobs = game.noobs.filter((noob) => {
         return noob.move() !== true;
